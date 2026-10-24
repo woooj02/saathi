@@ -147,11 +147,14 @@ points.
 
 - [ ] Learning activity complete — guided route, focused alternative, prior practice connected, or brief recap
 - [ ] Optional edit and transfer reflection addressed — offered/declined/already covered/not applicable as appropriate
-- [ ] `devpost/app-map.html` generated from finished code, checked, and shown, including a project-grounded practice
+- [x] `devpost/app-map.html` generated from finished code, checked, and shown, including a project-grounded practice
   to reuse
 
-Activity and evidence: not started
-Route and stops: not started
+Activity and evidence: guided route offered (follow "tell the story once" through the code), tied to the spec's
+useful unknown: the `/lab` test came back empty, so the planned fallback (Gemini listens) was used, and it became the
+story. Waiting for the learner to walk the route.
+Route and stops: `web/js/fill.js` story() → `app/story.py` extract()/_schema() → `app/story.py` _check() and
+`fill.js` storyResult(). Map checked offline with headless Chrome; all anchors checked against the source.
 Edit outcome: not started
 Reflection: not started
 Activity mode: not started
