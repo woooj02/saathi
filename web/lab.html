@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saathi speech test</title>
+<link rel="stylesheet" href="/static/css/saathi.css">
+<style>
+  .prompt { display: grid; grid-template-columns: 1fr auto; gap: 14px 18px; align-items: start; }
+  .prompt .mic { width: 72px; height: 72px; }
+  .prompt .mic svg { width: 28px; height: 28px; }
+  .heard { grid-column: 1 / -1; min-height: 52px; padding: 12px 14px; background: var(--grey-1); border-radius: var(--radius); font-size: 22px; }
+  .heard:empty::before { content: "…"; color: var(--grey-3); }
+  .verdict { grid-column: 1 / -1; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .verdict .btn[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+  .alts { grid-column: 1 / -1; font-size: 15px; color: var(--grey-4); }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  td, th { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--grey-2); }
+</style>
+</head>
+<body>
+<main class="page stack">
+  <div class="topbar"><div class="brand">Saathi <span class="ne">साथी</span></div><span class="tag quiet">Speech test, dev only</span></div>
+  <h1>Can Chrome understand Nepali?</h1>
+  <p class="muted">Tap a microphone, answer the question out loud in Nepali the way your mom would, and wait about two seconds after you finish. Then mark whether the words are usable. Press <strong>Save results</strong> at the end.</p>
+
+  <div id="support" class="notice"></div>
+
+  <div id="prompts" class="stack"></div>
+
+  <div class="row wrap">
+    <button id="save" class="btn primary">Save results</button>
+    <span id="saved" class="muted small"></span>
+  </div>
+
+  <hr>
+  <h2>Reading aloud</h2>
+  <p class="muted">Which voices this browser has. Saathi uses a Nepali voice if there is one, otherwise a Hindi voice, which can read Devanagari.</p>
+  <div class="row wrap">
+    <button id="say" class="btn">Read a Nepali sentence aloud</button>
+    <span id="picked" class="small"></span>
+  </div>
+  <table id="voices"><thead><tr><th>Voice</th><th>Language</th><th>Where</th></tr></thead><tbody></tbody></table>
+</main>
+
+<script type="module">
+import { canListen, listen, stopListening, listVoices, pickVoice, speak, ICONS } from "/static/js/voice.js";
+
+const PROMPTS = [
+  { id: "name", ne: "तपाईंको पूरा नाम के हो?", en: "A full name" },
+  { id: "address", ne: "तपाईं कहाँ बस्नुहुन्छ? पूरा ठेगाना भन्नुहोस्।", en: "A street address" },
+  { id: "date", ne: "तपाईंको जन्म मिति कहिले हो? नेपाली महिनामा भन्नुहोस्।", en: "A date in the Nepali calendar, e.g. 2021 साउन 15" },
+  { id: "story", ne: "चोट कसरी लाग्यो? आफ्नै शब्दमा भन्नुहोस्।", en: "A short accident story" },
+  { id: "medication", ne: "तपाईं अहिले कुन औषधि खानुहुन्छ?", en: "A medicine name and dose" },
+  { id: "yesno", ne: "के तपाईं आकस्मिक कक्षमा जानुभयो?", en: "A yes or no (हो / होइन)" },
+];
+const results = Object.fromEntries(PROMPTS.map((p) => [p.id, { heard: "", alternatives: [], confidence: null, usable: null }]));
+
+const support = document.getElementById("support");
+support.textContent = canListen()
+  ? "Speech recognition is available in this browser. Language: ne-NP (Nepali)."
+  : "Speech recognition isn't available here. Use Google Chrome on localhost.";
+
+const list = document.getElementById("prompts");
+for (const p of PROMPTS) {
+  const card = document.createElement("section");
+  card.className = "card prompt";
+  card.innerHTML = `
+    <div><div class="ne" lang="ne" style="font-size:24px;font-weight:700">${p.ne}</div><div class="muted small">${p.en}</div></div>
+    <button class="mic" aria-label="Speak">${ICONS.mic}</button>
+    <div class="heard ne" lang="ne"></div>
+    <div class="alts"></div>
+    <div class="verdict">
+      <span class="small">Usable?</span>
+      <button class="btn quiet" data-v="yes" aria-pressed="false">Yes</button>
+      <button class="btn quiet" data-v="partly" aria-pressed="false">Partly</button>
+      <button class="btn quiet" data-v="no" aria-pressed="false">No</button>
+    </div>`;
+  const mic = card.querySelector(".mic");
+  const heard = card.querySelector(".heard");
+  const alts = card.querySelector(".alts");
+  mic.disabled = !canListen();
+  mic.addEventListener("click", async () => {
+    if (mic.classList.contains("listening")) return stopListening();
+    mic.classList.add("listening");
+    mic.innerHTML = ICONS.stop;
+    heard.textContent = "";
+    alts.textContent = "";
+    try {
+      const r = await listen({ onInterim: (t) => (heard.textContent = t) });
+      heard.textContent = r.text;
+      Object.assign(results[p.id], { heard: r.text, alternatives: r.alternatives, confidence: r.confidence });
+      const others = r.alternatives.slice(1).filter(Boolean);
+      alts.textContent = `Confidence ${(r.confidence * 100).toFixed(0)}%` + (others.length ? ` · also heard: ${others.join(" / ")}` : "");
+    } catch (err) {
+      alts.textContent = `Didn't get it (${err.code}). Try again.`;
+    } finally {
+      mic.classList.remove("listening");
+      mic.innerHTML = ICONS.mic;
+    }
+  });
+  card.querySelectorAll(".verdict .btn").forEach((b) =>
+    b.addEventListener("click", () => {
+      card.querySelectorAll(".verdict .btn").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      results[p.id].usable = b.dataset.v;
+    }),
+  );
+  list.append(card);
+}
+
+document.getElementById("save").addEventListener("click", async () => {
+  const voice = await pickVoice();
+  const body = { results, voice: voice ? { name: voice.name, lang: voice.lang } : null, userAgent: navigator.userAgent };
+  const res = await fetch("/api/lab/results", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  document.getElementById("saved").textContent = res.ok ? "Saved. Tell Claude you're done." : "Couldn't save. Is the server running?";
+});
+
+const tbody = document.querySelector("#voices tbody");
+listVoices().then((voices) => {
+  const shown = voices.filter((v) => /^(ne|hi|en-US)/i.test(v.lang));
+  tbody.innerHTML = (shown.length ? shown : voices).map((v) => `<tr><td>${v.name}</td><td>${v.lang}</td><td>${v.local ? "on device" : "online"}</td></tr>`).join("")
+    || '<tr><td colspan="3" class="muted">No voices found.</td></tr>';
+});
+pickVoice().then((v) => (document.getElementById("picked").textContent = v ? `Saathi would use: ${v.name} (${v.lang})` : "No Nepali or Hindi voice: the speaker button will be hidden."));
+document.getElementById("say").addEventListener("click", () =>
+  speak("नमस्ते। म साथी हुँ। म तपाईंलाई यो फारम भर्न मद्दत गर्छु।").catch((e) => (document.getElementById("picked").textContent = `Couldn't read aloud: ${e.code}`)),
+);
+</script>
+</body>
+</html>

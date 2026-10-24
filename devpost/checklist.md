@@ -30,7 +30,7 @@ points.
   Learner check: Open `data/outbox/sample-filled.pdf` and check that it looks like a real clinic form, filled in.
   Commit: `Read and fill the sample intake form`
 
-- [ ] **2. Nepali speech test page**
+- [x] **2. Nepali speech test page**
   Becomes usable: `/lab` lets you tap a mic, speak Nepali, and see Chrome's transcript. It lists the Nepali and Hindi
   voices available for reading aloud, with a "read this" test.
   Why now: Nepali speech recognition is the main unknown (`spec.md > Decisions and Open Issues`). Every speaking

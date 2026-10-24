@@ -352,3 +352,6 @@ result here.
 ### Still open
 - The current Gemini model name and free-tier limits. Verify in build step 1.
 - Nepali voice availability on Linux Chrome. Checked in build step 1.
+- Build step 1 finding (automatic part): on the learner's Linux Chrome, `SpeechRecognition` exists and accepts
+  `ne-NP`. There's no Nepali voice for reading aloud, only "Google हिन्दी" (hi-IN, online), which Saathi uses as the
+  fallback. The quality of the learner's spoken test is still pending.
