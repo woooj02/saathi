@@ -220,3 +220,9 @@ Activity mode: not started
   N/A, skip, review, consent, signature → real send at 14:06.
 - One real Zoho send on 2026-10-24 (13:36), from contact@ to contact@keepsrunning.com: status `sent`, filled PDF
   attached.
+- After the final review, the learner asked to get Design and Innovation "as close to 10 as possible" before the
+  video. Chosen by the learner: **tell the story once** (one recording fills every answer it heard; checked like single
+  answers; then only the rest is asked). Live check with a 57 s Nepali story: 18 answers filled, including "last
+  Thursday" → 10/22/2026; one miss ("right knee" heard as leg/hip), which the review screen is for. Also for design:
+  questions read aloud in real Nepali with Gemini text-to-speech, recorded once per wording, the sample's recordings
+  committed; README screenshots.

@@ -188,7 +188,7 @@
         "needs_interpreter"
       ],
       "en": "Do you need an interpreter for your visits?",
-      "ne": "के तपाईंलाई हस्पिटल आउँदा दोभाषे (अनुवादक) चाहिन्छ?",
+      "ne": "के तपाईंलाई क्लिनिक आउँदा दोभाषे (अनुवादक) चाहिन्छ?",
       "section_en": "ABOUT YOU",
       "section_ne": "तपाईंको बारेमा",
       "options": [

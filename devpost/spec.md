@@ -145,6 +145,24 @@ PRD ref: `prd.md > Clinic Setup and Conversion`.
 - Dates go through `Nepali Dates`. The English is never shown before the patient confirms the both-sides card.
 PRD ref: `prd.md > Answering a Question`, `prd.md > Not Sure or Misunderstood`.
 
+### Story
+`app/story.py`. Handles `POST /api/forms/<id>/story` with one recording (multipart `audio`).
+- One Gemini call (with thinking) gets the recording and every question that can be answered by voice, with each
+  question's answer type and, for taps, its option values. The JSON schema is built from the form, so the reply can
+  only name real questions and real option values.
+- Every answer is then checked like a single answer: typed kinds through `Answer Interpreter`'s checks, dates through
+  `Nepali Dates`, taps against the PDF's option values. Anything that doesn't hold up is dropped.
+- Returns `{said, answers: {question_id: {value, said, en, parts?, story: true}}}`.
+PRD ref: `prd.md > Telling the Story Once`.
+
+### Read-Aloud Recordings
+`app/voice.py`. Handles `GET /api/forms/<id>/voice/<key>` (a question id, `consent-<id>`, or a screen's line).
+- The first request records the Nepali text with Gemini text-to-speech (`GEMINI_TTS_MODELS`, voice "Kore"), encodes it
+  to MP3 with ffmpeg (WAV without it) and keeps it next to the form, named by a hash of the text. Reworded text gets a
+  new recording.
+- 404 means "use the device's voice". The sample form's recordings are committed (`scripts/voice_sample.py`).
+PRD ref: `prd.md > Answering a Question`.
+
 ### Nepali Dates
 `app/nepali_dates.py`. Converts a BS date to AD with `nepali-datetime`, and formats it the way the form expects
 (MM/DD/YYYY by default). Unit-tested with known pairs.

@@ -69,12 +69,28 @@ Source: `scope.md > Inspiration & Identity`.
   - [ ] The clinic can edit the English or Nepali wording of any question before publishing.
   - [ ] Publishing gives a patient link that opens this clinic's form.
 
+### Telling the Story Once
+Added in the final review, at the learner's choice, to make the idea stand out ("goal is as close to 10 as
+possible"). Source: `scope.md > The Unique Kernel`.
+- As an older patient, I want to tell my story the way I'd tell an interpreter, not fill in fields, so that most of the
+  form is done before the questions start.
+  - [x] After the intro, a story screen asks the patient to talk about themselves and what happened, in their own
+        words, with a list of topics (name, birthday, address, phone, what happened, where it hurts, insurance).
+  - [x] One recording (up to 2 minutes; it waits through pauses) fills every answer the patient clearly said, and only
+        those. Each one is checked like a single answer, so nothing goes on the form that a question couldn't put there.
+  - [x] A results screen shows each filled answer both ways and says how many questions are left. The patient can say
+        it again, or go on to the questions that are left, which skip what the story answered.
+  - [x] Story answers are marked "तपाईंको कुराबाट" (from your story) on the review screen, where any can be changed.
+  - [x] "एक-एक प्रश्न गरेर भर्छु" skips the story. Without AI, there's no story screen.
+
 ### Answering a Question
 Source: `scope.md > The POC Boundary`.
 - As an older Nepali-speaking patient, I want each question asked in Nepali, one at a time, so that I'm never
   confused by an English form.
   - [ ] Each question screen shows progress (for example प्रश्न ३ / ४२), the section name, and the question in large
         Nepali text, with a speaker button to hear it.
+  - [x] The speaker plays the question in real Nepali (Gemini text-to-speech, recorded once per wording and kept), and
+        falls back to the device's voice. Added in the final review: the only device voice on Linux Chrome is Hindi.
   - [ ] Answering matches the question type:
         - **Text or date:** a big microphone button to speak, plus an option to type instead.
         - **Yes/no:** two big buttons, हो and होइन.
@@ -143,6 +159,10 @@ Source: `scope.md > What "Working" Looks Like`.
   isn't collected.
 - **Assumption: the demo uses a sample PT accident intake form made for the project, with made-up answers.** No real
   patient data.
+
+- **Tell the story once (added in the final review).** The learner chose it over flat-PDF support as the way to make
+  the project stand out. It mirrors how elders talk to an interpreter.
+- **Questions read aloud in real Nepali (added in the final review),** to get the design "to 10".
 
 ## What We're Building
 - Clinic setup, conversion of a fillable PDF into Nepali/English questions, question review and editing, and a
