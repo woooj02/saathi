@@ -67,7 +67,7 @@ points.
   downloaded PDF. Say how it looks and feels for your mom.
   Commit: `Add the patient journey on the sample form`
 
-- [ ] **4. Spoken answers become English on the both-sides card**
+- [x] **4. Spoken answers become English on the both-sides card**
   Becomes usable: On text, name and date questions, the patient taps the mic and speaks Nepali. Gemini returns clean
   Nepali and English, or a date that code converts. The both-sides card shows both before the patient confirms. If
   speech isn't understood, they're asked to say it again or type. Without a Gemini key, the mic is hidden and typing
@@ -161,3 +161,8 @@ Activity mode: not started
   slice 4.
 - Dates also have a picker (Nepali or English calendar, year/month/day) that needs no AI. The server converts BS→AD
   exactly (`GET /api/dates/convert`). Speaking a date is added in slice 4.
+- Slice 4 was verified with a fake Gemini, in unit tests and in a throwaway browser check of the both-sides card. The
+  live Gemini check (one call per kind) waits for the learner's `GEMINI_API_KEY`. Spoken input on the patient pages
+  can only be tried by a person at a microphone.
+- Typed Nepali also goes through the interpreter, not just speech, so a patient can type in Devanagari once AI is on.
+  Phone numbers, codes and email are cleaned up in code after Gemini, not trusted as-is.

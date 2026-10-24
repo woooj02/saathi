@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import mailer, nepali_dates, settings, store
+from . import answers, gemini, mailer, nepali_dates, settings, store
 from .answers_to_pdf import BadAnswer, build_values
 from .filler import fill_pdf
 
@@ -67,6 +67,29 @@ def get_form(form_id: str):
 class Submission(BaseModel):
     answers: dict = Field(default_factory=dict)
     signer_name: str = Field(min_length=2, max_length=80)
+
+
+class Spoken(BaseModel):
+    question_id: str
+    transcript: str = Field(max_length=2000)
+    lang: str = "ne"
+
+
+@app.post("/api/forms/{form_id}/interpret")
+def interpret(form_id: str, body: Spoken):
+    """A spoken or typed Nepali answer -> the English for the form (Gemini)."""
+    form = _load(form_id)
+    question = next((q for q in form["questions"] if q["id"] == body.question_id), None)
+    if question is None:
+        raise HTTPException(404, "No such question.")
+    if not gemini.available():
+        raise HTTPException(503, "AI is not configured; type or tap the answer instead.")
+    try:
+        return answers.interpret(question, body.transcript)
+    except answers.NotInterpretable:
+        raise HTTPException(422, "This question is answered by tapping.")
+    except gemini.AIError:
+        raise HTTPException(502, "Couldn't understand the answer right now.")
 
 
 @app.post("/api/forms/{form_id}/submit")
