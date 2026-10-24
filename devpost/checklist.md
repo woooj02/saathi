@@ -105,7 +105,7 @@ points.
   the patient link.
   Commit: `Add clinic upload, review and patient link`
 
-- [ ] **6. The filled form arrives in the clinic's inbox**
+- [x] **6. The filled form arrives in the clinic's inbox**
   Becomes usable: With `MAIL_MODE=send`, sending emails the filled PDF from `contact@keepsrunning.com` to the clinic,
   with skipped fields listed. A second send within 300 seconds is held in the outbox, and the patient's download still
   works.
@@ -179,3 +179,7 @@ Activity mode: not started
   your wording" for the clinic. Verified with a fake Gemini (tests, and a browser run of
   upload → convert → edit → publish → patient link). The live conversion waits for the key (see Final Review).
 - Patient links use `PUBLIC_BASE_URL` if set, else the address the clinic page was opened on.
+- Mail statuses are `sent`, `saved` (file mode), `deferred` (inside the send gap) and `failed`. The patient's Sent
+  screen says "sent to the clinic" for sent and saved, and "show this copy at the front desk" otherwise. Verified with
+  a fake SMTP server. The one real Zoho send waits for the app password (see Final Review).
+- The `LICENSE` copyright line uses the name from the learner's Devpost profile (Aryan Neopane). Confirm it at ship.
