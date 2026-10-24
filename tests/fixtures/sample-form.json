@@ -1,0 +1,1061 @@
+{
+  "id": "sample",
+  "clinic_name": "Riverbend Physical Therapy",
+  "clinic_email": "contact@keepsrunning.com",
+  "form_title_en": "New Patient Intake: Accident / Injury",
+  "form_title_ne": "नयाँ बिरामी फारम: दुर्घटना / चोट",
+  "status": "published",
+  "source": "handwritten",
+  "questions": [
+    {
+      "id": "last_name",
+      "kind": "name",
+      "fields": [
+        "last_name"
+      ],
+      "en": "What is your last name (family name)?",
+      "ne": "तपाईंको थर के हो?",
+      "section_en": "About you",
+      "section_ne": "तपाईंको बारेमा",
+      "help_ne": "जस्तै: न्यौपाने, गुरुङ, श्रेष्ठ"
+    },
+    {
+      "id": "first_name",
+      "kind": "name",
+      "fields": [
+        "first_name"
+      ],
+      "en": "What is your first name?",
+      "ne": "तपाईंको नाम के हो? (थर बाहेक)",
+      "section_en": "About you",
+      "section_ne": "तपाईंको बारेमा"
+    },
+    {
+      "id": "middle_initial",
+      "kind": "name",
+      "fields": [
+        "middle_initial"
+      ],
+      "en": "What is the first letter of your middle name, if you have one?",
+      "ne": "तपाईंको बीचको नाम छ भने, त्यसको पहिलो अक्षर के हो?",
+      "section_en": "About you",
+      "section_ne": "तपाईंको बारेमा",
+      "optional": true,
+      "help_ne": "छैन भने ‘थाहा छैन / पछि दिन्छु’ थिच्नुहोस्।"
+    },
+    {
+      "id": "date_of_birth",
+      "kind": "date",
+      "fields": [
+        "date_of_birth"
+      ],
+      "en": "What is your date of birth?",
+      "ne": "तपाईंको जन्म मिति कहिले हो?",
+      "section_en": "About you",
+      "section_ne": "तपाईंको बारेमा",
+      "format": "MM/DD/YYYY",
+      "help_ne": "नेपाली वा अंग्रेजी, जुन पात्रोमा याद छ, त्यही भन्नुहोस्।"
+    },
+    {
+      "id": "phone",
+      "kind": "number",
+      "fields": [
+        "phone"
+      ],
+      "en": "What is your phone number?",
+      "ne": "तपाईंको फोन नम्बर के हो?",
+      "section_en": "About you",
+      "section_ne": "तपाईंको बारेमा"
+    },
+    {
+      "id": "preferred_language",
+      "kind": "text",
+      "fields": [
+        "preferred_language"
+      ],
+      "en": "Which language do you prefer to speak?",
+      "ne": "तपाईं कुन भाषामा कुरा गर्न रुचाउनुहुन्छ?",
+      "section_en": "About you",
+      "section_ne": "तपाईंको बारेमा",
+      "suggestions": [
+        {
+          "en": "Nepali",
+          "ne": "नेपाली"
+        },
+        {
+          "en": "Nepali and Hindi",
+          "ne": "नेपाली र हिन्दी"
+        }
+      ]
+    },
+    {
+      "id": "sex",
+      "kind": "choice",
+      "fields": [
+        "sex"
+      ],
+      "en": "What is your sex?",
+      "ne": "तपाईंको लिङ्ग के हो?",
+      "section_en": "About you",
+      "section_ne": "तपाईंको बारेमा",
+      "options": [
+        {
+          "value": "Male",
+          "en": "Male",
+          "ne": "पुरुष"
+        },
+        {
+          "value": "Female",
+          "en": "Female",
+          "ne": "महिला"
+        },
+        {
+          "value": "Undisclosed",
+          "en": "Prefer not to say",
+          "ne": "भन्न चाहन्न"
+        }
+      ]
+    },
+    {
+      "id": "address_street",
+      "kind": "text",
+      "fields": [
+        "address_street"
+      ],
+      "en": "What is your street address?",
+      "ne": "तपाईंको घरको ठेगाना के हो? घर नम्बर र सडकको नाम भन्नुहोस्।",
+      "section_en": "About you",
+      "section_ne": "तपाईंको बारेमा",
+      "help_ne": "अपार्टमेन्ट भए त्यसको नम्बर पनि भन्नुहोस्।"
+    },
+    {
+      "id": "address_city",
+      "kind": "text",
+      "fields": [
+        "address_city"
+      ],
+      "en": "Which city do you live in?",
+      "ne": "तपाईं कुन सहरमा बस्नुहुन्छ?",
+      "section_en": "About you",
+      "section_ne": "तपाईंको बारेमा",
+      "suggestions": [
+        {
+          "en": "Aurora",
+          "ne": "अरोरा"
+        },
+        {
+          "en": "Denver",
+          "ne": "डेनभर"
+        }
+      ]
+    },
+    {
+      "id": "address_state",
+      "kind": "text",
+      "fields": [
+        "address_state"
+      ],
+      "en": "Which state do you live in?",
+      "ne": "कुन राज्यमा?",
+      "section_en": "About you",
+      "section_ne": "तपाईंको बारेमा",
+      "suggestions": [
+        {
+          "en": "CO",
+          "ne": "कोलोराडो"
+        }
+      ]
+    },
+    {
+      "id": "address_zip",
+      "kind": "number",
+      "fields": [
+        "address_zip"
+      ],
+      "en": "What is your ZIP code?",
+      "ne": "तपाईंको जिप कोड (ZIP) के हो?",
+      "section_en": "About you",
+      "section_ne": "तपाईंको बारेमा",
+      "help_ne": "ठेगानाको अन्त्यमा हुने ५ अंकको नम्बर।"
+    },
+    {
+      "id": "email",
+      "kind": "email",
+      "fields": [
+        "email"
+      ],
+      "en": "What is your email address?",
+      "ne": "तपाईंको इमेल ठेगाना के हो?",
+      "section_en": "About you",
+      "section_ne": "तपाईंको बारेमा",
+      "optional": true,
+      "help_ne": "इमेल छैन भने ‘थाहा छैन / पछि दिन्छु’ थिच्नुहोस्।"
+    },
+    {
+      "id": "occupation",
+      "kind": "text",
+      "fields": [
+        "occupation"
+      ],
+      "en": "What is your job?",
+      "ne": "तपाईं के काम गर्नुहुन्छ?",
+      "section_en": "About you",
+      "section_ne": "तपाईंको बारेमा",
+      "suggestions": [
+        {
+          "en": "Homemaker",
+          "ne": "गृहिणी"
+        },
+        {
+          "en": "Retired",
+          "ne": "अवकाश प्राप्त"
+        }
+      ]
+    },
+    {
+      "id": "needs_interpreter",
+      "kind": "yesno",
+      "fields": [
+        "needs_interpreter"
+      ],
+      "en": "Do you need an interpreter for your visits?",
+      "ne": "जाँच गराउन आउँदा तपाईंलाई दोभाषे चाहिन्छ?",
+      "section_en": "About you",
+      "section_ne": "तपाईंको बारेमा",
+      "options": [
+        {
+          "value": "Yes",
+          "en": "Yes",
+          "ne": "हो"
+        },
+        {
+          "value": "No",
+          "en": "No",
+          "ne": "होइन"
+        }
+      ]
+    },
+    {
+      "id": "emergency_name",
+      "kind": "name",
+      "fields": [
+        "emergency_name"
+      ],
+      "en": "Who should we contact in an emergency? Their full name.",
+      "ne": "आपत् परेमा कसलाई खबर गर्ने? उहाँको पूरा नाम भन्नुहोस्।",
+      "section_en": "Emergency contact",
+      "section_ne": "आपतकालीन सम्पर्क"
+    },
+    {
+      "id": "emergency_relationship",
+      "kind": "text",
+      "fields": [
+        "emergency_relationship"
+      ],
+      "en": "How is this person related to you?",
+      "ne": "उहाँ तपाईंको को हुनुहुन्छ?",
+      "section_en": "Emergency contact",
+      "section_ne": "आपतकालीन सम्पर्क",
+      "suggestions": [
+        {
+          "en": "Son",
+          "ne": "छोरा"
+        },
+        {
+          "en": "Daughter",
+          "ne": "छोरी"
+        },
+        {
+          "en": "Husband",
+          "ne": "श्रीमान्"
+        },
+        {
+          "en": "Wife",
+          "ne": "श्रीमती"
+        },
+        {
+          "en": "Brother",
+          "ne": "दाजु / भाइ"
+        },
+        {
+          "en": "Sister",
+          "ne": "दिदी / बहिनी"
+        }
+      ]
+    },
+    {
+      "id": "emergency_phone",
+      "kind": "number",
+      "fields": [
+        "emergency_phone"
+      ],
+      "en": "What is their phone number?",
+      "ne": "उहाँको फोन नम्बर के हो?",
+      "section_en": "Emergency contact",
+      "section_ne": "आपतकालीन सम्पर्क"
+    },
+    {
+      "id": "injury_date",
+      "kind": "date",
+      "fields": [
+        "injury_date"
+      ],
+      "en": "On what date did the injury happen?",
+      "ne": "चोट कुन दिन लाग्यो?",
+      "section_en": "The accident",
+      "section_ne": "दुर्घटना",
+      "format": "MM/DD/YYYY"
+    },
+    {
+      "id": "injury_time",
+      "kind": "text",
+      "fields": [
+        "injury_time"
+      ],
+      "en": "About what time of day did it happen?",
+      "ne": "कति बजेतिर भएको थियो?",
+      "section_en": "The accident",
+      "section_ne": "दुर्घटना",
+      "suggestions": [
+        {
+          "en": "Morning",
+          "ne": "बिहान"
+        },
+        {
+          "en": "Afternoon",
+          "ne": "दिउँसो"
+        },
+        {
+          "en": "Evening",
+          "ne": "बेलुका"
+        },
+        {
+          "en": "Night",
+          "ne": "राति"
+        }
+      ]
+    },
+    {
+      "id": "injury_city",
+      "kind": "text",
+      "fields": [
+        "injury_city"
+      ],
+      "en": "In which city did it happen?",
+      "ne": "कुन सहरमा भएको थियो?",
+      "section_en": "The accident",
+      "section_ne": "दुर्घटना"
+    },
+    {
+      "id": "accident_type",
+      "kind": "choice",
+      "fields": [
+        "accident_type"
+      ],
+      "en": "What kind of accident was it?",
+      "ne": "कस्तो किसिमको दुर्घटना थियो?",
+      "section_en": "The accident",
+      "section_ne": "दुर्घटना",
+      "options": [
+        {
+          "value": "MotorVehicle",
+          "en": "Motor vehicle",
+          "ne": "गाडी दुर्घटना"
+        },
+        {
+          "value": "Work",
+          "en": "At work",
+          "ne": "काम गर्दा"
+        },
+        {
+          "value": "Fall",
+          "en": "Slip or fall",
+          "ne": "चिप्लिएर वा लडेर"
+        },
+        {
+          "value": "Sports",
+          "en": "Sports",
+          "ne": "खेल्दा"
+        },
+        {
+          "value": "Other",
+          "en": "Other",
+          "ne": "अरू"
+        }
+      ]
+    },
+    {
+      "id": "injury_description",
+      "kind": "text",
+      "fields": [
+        "injury_description"
+      ],
+      "en": "In your own words, how did the injury happen?",
+      "ne": "चोट कसरी लाग्यो? आफ्नै शब्दमा भन्नुहोस्।",
+      "section_en": "The accident",
+      "section_ne": "दुर्घटना",
+      "long": true
+    },
+    {
+      "id": "seen_er",
+      "kind": "yesno",
+      "fields": [
+        "seen_er"
+      ],
+      "en": "Did you go to an emergency room or urgent care?",
+      "ne": "यो चोटपछि तपाईं इमर्जेन्सी वा अर्जेन्ट केयरमा जानुभयो?",
+      "section_en": "Care so far",
+      "section_ne": "अहिलेसम्मको उपचार",
+      "options": [
+        {
+          "value": "Yes",
+          "en": "Yes",
+          "ne": "हो"
+        },
+        {
+          "value": "No",
+          "en": "No",
+          "ne": "होइन"
+        }
+      ]
+    },
+    {
+      "id": "seen_other_doctor",
+      "kind": "yesno",
+      "fields": [
+        "seen_other_doctor"
+      ],
+      "en": "Have you seen another doctor for this injury?",
+      "ne": "यो चोटको लागि अरू कुनै डाक्टरलाई देखाउनुभयो?",
+      "section_en": "Care so far",
+      "section_ne": "अहिलेसम्मको उपचार",
+      "options": [
+        {
+          "value": "Yes",
+          "en": "Yes",
+          "ne": "हो"
+        },
+        {
+          "value": "No",
+          "en": "No",
+          "ne": "होइन"
+        }
+      ]
+    },
+    {
+      "id": "referring_doctor",
+      "kind": "name",
+      "fields": [
+        "referring_doctor"
+      ],
+      "en": "What is the name of the doctor who sent you here?",
+      "ne": "तपाईंलाई यहाँ पठाउने डाक्टरको नाम के हो?",
+      "section_en": "Care so far",
+      "section_ne": "अहिलेसम्मको उपचार",
+      "optional": true
+    },
+    {
+      "id": "referring_doctor_phone",
+      "kind": "number",
+      "fields": [
+        "referring_doctor_phone"
+      ],
+      "en": "What is that doctor's phone number?",
+      "ne": "ती डाक्टरको फोन नम्बर के हो?",
+      "section_en": "Care so far",
+      "section_ne": "अहिलेसम्मको उपचार",
+      "optional": true
+    },
+    {
+      "id": "had_imaging",
+      "kind": "yesno",
+      "fields": [
+        "had_imaging"
+      ],
+      "en": "Have you had an X-ray, MRI, or CT scan for this injury?",
+      "ne": "यो चोटको लागि एक्स-रे, एमआरआई वा सिटी स्क्यान गर्नुभयो?",
+      "section_en": "Care so far",
+      "section_ne": "अहिलेसम्मको उपचार",
+      "options": [
+        {
+          "value": "Yes",
+          "en": "Yes",
+          "ne": "हो"
+        },
+        {
+          "value": "No",
+          "en": "No",
+          "ne": "होइन"
+        }
+      ]
+    },
+    {
+      "id": "workers_comp",
+      "kind": "yesno",
+      "fields": [
+        "workers_comp"
+      ],
+      "en": "Is this injury related to your job (workers' compensation)?",
+      "ne": "यो चोट तपाईंको कामसँग सम्बन्धित छ? (वर्कर्स कम्पेन्सेसन)",
+      "section_en": "Claims",
+      "section_ne": "क्लेम र वकिल",
+      "options": [
+        {
+          "value": "Yes",
+          "en": "Yes",
+          "ne": "हो"
+        },
+        {
+          "value": "No",
+          "en": "No",
+          "ne": "होइन"
+        }
+      ]
+    },
+    {
+      "id": "has_attorney",
+      "kind": "yesno",
+      "fields": [
+        "has_attorney"
+      ],
+      "en": "Is an attorney representing you for this injury?",
+      "ne": "यो चोटको मुद्दामा तपाईंको वकिल हुनुहुन्छ?",
+      "section_en": "Claims",
+      "section_ne": "क्लेम र वकिल",
+      "options": [
+        {
+          "value": "Yes",
+          "en": "Yes",
+          "ne": "हो"
+        },
+        {
+          "value": "No",
+          "en": "No",
+          "ne": "होइन"
+        }
+      ]
+    },
+    {
+      "id": "attorney_contact",
+      "kind": "text",
+      "fields": [
+        "attorney_contact"
+      ],
+      "en": "What is your attorney's name and phone number?",
+      "ne": "वकिलको नाम र फोन नम्बर के हो?",
+      "section_en": "Claims",
+      "section_ne": "क्लेम र वकिल",
+      "optional": true
+    },
+    {
+      "id": "insurance_company",
+      "kind": "text",
+      "fields": [
+        "insurance_company"
+      ],
+      "en": "What is the name of your health insurance company?",
+      "ne": "तपाईंको स्वास्थ्य बीमा कम्पनीको नाम के हो?",
+      "section_en": "Health insurance",
+      "section_ne": "स्वास्थ्य बीमा",
+      "help_ne": "बीमा कार्डको अगाडि लेखिएको हुन्छ।"
+    },
+    {
+      "id": "insurance_member_id",
+      "kind": "code",
+      "fields": [
+        "insurance_member_id"
+      ],
+      "en": "What is the Member ID on your insurance card?",
+      "ne": "बीमा कार्डमा भएको सदस्य नम्बर (Member ID) के हो?",
+      "section_en": "Health insurance",
+      "section_ne": "स्वास्थ्य बीमा"
+    },
+    {
+      "id": "insurance_group",
+      "kind": "code",
+      "fields": [
+        "insurance_group"
+      ],
+      "en": "What is the group number on your insurance card?",
+      "ne": "बीमा कार्डमा भएको ग्रुप नम्बर के हो?",
+      "section_en": "Health insurance",
+      "section_ne": "स्वास्थ्य बीमा",
+      "optional": true
+    },
+    {
+      "id": "policy_holder_name",
+      "kind": "name",
+      "fields": [
+        "policy_holder_name"
+      ],
+      "en": "Whose name is the insurance in? Their full name.",
+      "ne": "बीमा कसको नाममा छ? उहाँको पूरा नाम भन्नुहोस्।",
+      "section_en": "Health insurance",
+      "section_ne": "स्वास्थ्य बीमा",
+      "help_ne": "आफ्नै नाममा भए आफ्नो नाम भन्नुहोस्।"
+    },
+    {
+      "id": "policy_holder_dob",
+      "kind": "date",
+      "fields": [
+        "policy_holder_dob"
+      ],
+      "en": "What is the policy holder's date of birth?",
+      "ne": "बीमा भएको व्यक्तिको जन्म मिति कहिले हो?",
+      "section_en": "Health insurance",
+      "section_ne": "स्वास्थ्य बीमा",
+      "format": "MM/DD/YYYY"
+    },
+    {
+      "id": "policy_holder_relationship",
+      "kind": "choice",
+      "fields": [
+        "policy_holder_relationship"
+      ],
+      "en": "How is the policy holder related to you?",
+      "ne": "बीमा भएको व्यक्ति तपाईंको को हुनुहुन्छ?",
+      "section_en": "Health insurance",
+      "section_ne": "स्वास्थ्य बीमा",
+      "options": [
+        {
+          "value": "Self",
+          "en": "Myself",
+          "ne": "म आफै"
+        },
+        {
+          "value": "Spouse",
+          "en": "Spouse",
+          "ne": "श्रीमान् / श्रीमती"
+        },
+        {
+          "value": "Parent",
+          "en": "Parent",
+          "ne": "आमा / बुबा"
+        },
+        {
+          "value": "Other",
+          "en": "Other",
+          "ne": "अरू"
+        }
+      ]
+    },
+    {
+      "id": "auto_insurance_company",
+      "kind": "text",
+      "fields": [
+        "auto_insurance_company"
+      ],
+      "en": "If this was a car accident, what is the auto insurance company?",
+      "ne": "गाडी दुर्घटना भएको हो भने, गाडीको बीमा कम्पनी कुन हो?",
+      "section_en": "Accident claim",
+      "section_ne": "दुर्घटनाको बीमा क्लेम",
+      "optional": true
+    },
+    {
+      "id": "auto_claim_number",
+      "kind": "code",
+      "fields": [
+        "auto_claim_number"
+      ],
+      "en": "What is the auto insurance claim number?",
+      "ne": "गाडी बीमाको क्लेम नम्बर के हो?",
+      "section_en": "Accident claim",
+      "section_ne": "दुर्घटनाको बीमा क्लेम",
+      "optional": true
+    },
+    {
+      "id": "wc_claim_number",
+      "kind": "code",
+      "fields": [
+        "wc_claim_number"
+      ],
+      "en": "What is the workers' compensation claim number?",
+      "ne": "कामको चोटको (वर्कर्स कम्प) क्लेम नम्बर के हो?",
+      "section_en": "Accident claim",
+      "section_ne": "दुर्घटनाको बीमा क्लेम",
+      "optional": true
+    },
+    {
+      "id": "employer_name",
+      "kind": "text",
+      "fields": [
+        "employer_name"
+      ],
+      "en": "What is the name of your employer?",
+      "ne": "तपाईं काम गर्ने कम्पनीको नाम के हो?",
+      "section_en": "Accident claim",
+      "section_ne": "दुर्घटनाको बीमा क्लेम",
+      "optional": true
+    },
+    {
+      "id": "pain_areas",
+      "kind": "multi",
+      "fields": [
+        "pain_head",
+        "pain_neck",
+        "pain_upper_back",
+        "pain_lower_back",
+        "pain_shoulder",
+        "pain_arm",
+        "pain_hand",
+        "pain_hip",
+        "pain_knee",
+        "pain_foot"
+      ],
+      "en": "Where is your pain? Choose all that apply.",
+      "ne": "तपाईंलाई कहाँ कहाँ दुख्छ? सबै छान्नुहोस्।",
+      "section_en": "Your pain",
+      "section_ne": "तपाईंको दुखाइ",
+      "options": [
+        {
+          "value": "pain_head",
+          "en": "Head",
+          "ne": "टाउको"
+        },
+        {
+          "value": "pain_neck",
+          "en": "Neck",
+          "ne": "घाँटी / गर्दन"
+        },
+        {
+          "value": "pain_upper_back",
+          "en": "Upper back",
+          "ne": "ढाडको माथिल्लो भाग"
+        },
+        {
+          "value": "pain_lower_back",
+          "en": "Lower back",
+          "ne": "कम्मर / तल्लो ढाड"
+        },
+        {
+          "value": "pain_shoulder",
+          "en": "Shoulder",
+          "ne": "काँध"
+        },
+        {
+          "value": "pain_arm",
+          "en": "Arm or elbow",
+          "ne": "पाखुरा वा कुहिनो"
+        },
+        {
+          "value": "pain_hand",
+          "en": "Wrist or hand",
+          "ne": "नाडी वा हात"
+        },
+        {
+          "value": "pain_hip",
+          "en": "Hip",
+          "ne": "कम्मरको जोर्नी (हिप)"
+        },
+        {
+          "value": "pain_knee",
+          "en": "Knee",
+          "ne": "घुँडा"
+        },
+        {
+          "value": "pain_foot",
+          "en": "Ankle or foot",
+          "ne": "गोलीगाँठो वा खुट्टा"
+        }
+      ]
+    },
+    {
+      "id": "pain_now",
+      "kind": "scale",
+      "fields": [
+        "pain_now"
+      ],
+      "en": "How much pain do you have right now, from 0 (none) to 10 (worst)?",
+      "ne": "अहिले कति दुख्छ? ० भनेको दुखाइ छैन, १० भनेको सबैभन्दा धेरै।",
+      "section_en": "Your pain",
+      "section_ne": "तपाईंको दुखाइ",
+      "options": [
+        {
+          "value": "0",
+          "en": "0",
+          "ne": "०"
+        },
+        {
+          "value": "1",
+          "en": "1",
+          "ne": "१"
+        },
+        {
+          "value": "2",
+          "en": "2",
+          "ne": "२"
+        },
+        {
+          "value": "3",
+          "en": "3",
+          "ne": "३"
+        },
+        {
+          "value": "4",
+          "en": "4",
+          "ne": "४"
+        },
+        {
+          "value": "5",
+          "en": "5",
+          "ne": "५"
+        },
+        {
+          "value": "6",
+          "en": "6",
+          "ne": "६"
+        },
+        {
+          "value": "7",
+          "en": "7",
+          "ne": "७"
+        },
+        {
+          "value": "8",
+          "en": "8",
+          "ne": "८"
+        },
+        {
+          "value": "9",
+          "en": "9",
+          "ne": "९"
+        },
+        {
+          "value": "10",
+          "en": "10",
+          "ne": "१०"
+        }
+      ],
+      "low_ne": "दुखाइ छैन",
+      "high_ne": "सबैभन्दा धेरै"
+    },
+    {
+      "id": "pain_pattern",
+      "kind": "choice",
+      "fields": [
+        "pain_pattern"
+      ],
+      "en": "Is your pain constant, or does it come and go?",
+      "ne": "दुखाइ सधैं हुन्छ कि कहिलेकाहीं मात्र?",
+      "section_en": "Your pain",
+      "section_ne": "तपाईंको दुखाइ",
+      "options": [
+        {
+          "value": "Constant",
+          "en": "Constant",
+          "ne": "सधैं दुख्छ"
+        },
+        {
+          "value": "Intermittent",
+          "en": "Comes and goes",
+          "ne": "कहिलेकाहीं मात्र"
+        }
+      ]
+    },
+    {
+      "id": "pain_worse",
+      "kind": "text",
+      "fields": [
+        "pain_worse"
+      ],
+      "en": "What makes your pain worse?",
+      "ne": "केले गर्दा बढी दुख्छ?",
+      "section_en": "Your pain",
+      "section_ne": "तपाईंको दुखाइ",
+      "help_ne": "जस्तै: हिँड्दा, उठ्दा-बस्दा, भारी बोक्दा।"
+    },
+    {
+      "id": "therapy_goals",
+      "kind": "text",
+      "fields": [
+        "therapy_goals"
+      ],
+      "en": "What do you hope to be able to do again after therapy?",
+      "ne": "उपचारपछि फेरि के गर्न सक्ने हुन चाहनुहुन्छ?",
+      "section_en": "Your pain",
+      "section_ne": "तपाईंको दुखाइ",
+      "help_ne": "जस्तै: खाना पकाउन, मन्दिर जान, नातिनातिनासँग खेल्न।"
+    },
+    {
+      "id": "conditions",
+      "kind": "multi",
+      "fields": [
+        "hx_high_bp",
+        "hx_diabetes",
+        "hx_heart",
+        "hx_asthma",
+        "hx_arthritis",
+        "hx_osteoporosis",
+        "hx_cancer",
+        "hx_pacemaker",
+        "hx_pregnant"
+      ],
+      "en": "Do you have, or have you had, any of these? Choose all that apply.",
+      "ne": "तपाईंलाई यीमध्ये कुनै रोग छ, वा पहिले थियो? सबै छान्नुहोस्।",
+      "section_en": "Medical history",
+      "section_ne": "स्वास्थ्यको इतिहास",
+      "options": [
+        {
+          "value": "hx_high_bp",
+          "en": "High blood pressure",
+          "ne": "उच्च रक्तचाप (प्रेसर)"
+        },
+        {
+          "value": "hx_diabetes",
+          "en": "Diabetes",
+          "ne": "मधुमेह (सुगर)"
+        },
+        {
+          "value": "hx_heart",
+          "en": "Heart disease",
+          "ne": "मुटुको रोग"
+        },
+        {
+          "value": "hx_asthma",
+          "en": "Asthma",
+          "ne": "दम"
+        },
+        {
+          "value": "hx_arthritis",
+          "en": "Arthritis",
+          "ne": "बाथ (आर्थराइटिस)"
+        },
+        {
+          "value": "hx_osteoporosis",
+          "en": "Osteoporosis",
+          "ne": "हड्डी कमजोर हुने रोग"
+        },
+        {
+          "value": "hx_cancer",
+          "en": "Cancer",
+          "ne": "क्यान्सर"
+        },
+        {
+          "value": "hx_pacemaker",
+          "en": "Pacemaker",
+          "ne": "पेसमेकर"
+        },
+        {
+          "value": "hx_pregnant",
+          "en": "Currently pregnant",
+          "ne": "अहिले गर्भवती"
+        }
+      ]
+    },
+    {
+      "id": "medications",
+      "kind": "text",
+      "fields": [
+        "medications"
+      ],
+      "en": "Which medicines do you take now? Name and dose.",
+      "ne": "अहिले कुन कुन औषधि खानुहुन्छ? औषधिको नाम र मात्रा भन्नुहोस्।",
+      "section_en": "Medical history",
+      "section_ne": "स्वास्थ्यको इतिहास",
+      "long": true,
+      "help_ne": "औषधिको बट्टा हेरेर भन्न सक्नुहुन्छ।"
+    },
+    {
+      "id": "allergies",
+      "kind": "text",
+      "fields": [
+        "allergies"
+      ],
+      "en": "Are you allergic to any medicines, latex, or foods?",
+      "ne": "कुनै औषधि, रबर (लेटेक्स) वा खानेकुराले तपाईंलाई एलर्जी हुन्छ?",
+      "section_en": "Medical history",
+      "section_ne": "स्वास्थ्यको इतिहास",
+      "suggestions": [
+        {
+          "en": "No known allergies",
+          "ne": "कुनै एलर्जी छैन"
+        }
+      ]
+    },
+    {
+      "id": "past_surgeries",
+      "kind": "text",
+      "fields": [
+        "past_surgeries"
+      ],
+      "en": "Have you had any surgeries before?",
+      "ne": "पहिले कुनै अपरेसन (शल्यक्रिया) गर्नुभएको छ?",
+      "section_en": "Medical history",
+      "section_ne": "स्वास्थ्यको इतिहास",
+      "suggestions": [
+        {
+          "en": "None",
+          "ne": "छैन"
+        }
+      ]
+    },
+    {
+      "id": "signature",
+      "kind": "signature",
+      "fields": [
+        "patient_signature"
+      ],
+      "en": "Patient signature",
+      "ne": "बिरामीको हस्ताक्षर",
+      "section_en": "Signature",
+      "section_ne": "हस्ताक्षर"
+    },
+    {
+      "id": "signature_date",
+      "kind": "auto_date",
+      "fields": [
+        "signature_date"
+      ],
+      "en": "Date signed",
+      "ne": "हस्ताक्षर गरेको मिति",
+      "section_en": "Signature",
+      "section_ne": "हस्ताक्षर",
+      "format": "MM/DD/YYYY"
+    },
+    {
+      "id": "printed_name",
+      "kind": "auto_name",
+      "fields": [
+        "printed_name"
+      ],
+      "en": "Printed name",
+      "ne": "नाम (अंग्रेजी अक्षरमा)",
+      "section_en": "Signature",
+      "section_ne": "हस्ताक्षर"
+    },
+    {
+      "id": "signer_relationship",
+      "kind": "skip",
+      "fields": [
+        "signer_relationship"
+      ],
+      "en": "If signed by someone else, relationship",
+      "ne": "अरू कसैले हस्ताक्षर गरेमा, बिरामीसँगको नाता",
+      "section_en": "Signature",
+      "section_ne": "हस्ताक्षर"
+    }
+  ],
+  "consent": [
+    {
+      "id": "treatment",
+      "title_en": "Consent to evaluation and treatment",
+      "title_ne": "जाँच र उपचारको सहमति",
+      "en": "I agree to an evaluation and physical therapy treatment by the licensed therapists of Riverbend Physical Therapy. Treatment may include exercise, manual therapy, heat, ice, and electrical stimulation. My therapist will explain the plan of care, and I may ask questions or stop treatment at any time. I understand that results are not guaranteed.",
+      "ne": "तपाईं यहाँका फिजियोथेरापिस्टबाट जाँच र उपचार गराउन सहमत हुनुहुन्छ। उपचारमा व्यायाम, हातले थिचेर वा चलाएर गरिने उपचार, तातो वा चिसो सेक, र हल्का बिजुलीको उपचार हुन सक्छ। थेरापिस्टले उपचारको योजना बुझाउनुहुन्छ। तपाईं जुनसुकै बेला प्रश्न सोध्न वा उपचार रोक्न सक्नुहुन्छ। उपचारले पक्कै निको पार्छ भन्ने ग्यारेन्टी छैन।"
+    },
+    {
+      "id": "privacy",
+      "title_en": "Privacy notice acknowledgement (HIPAA)",
+      "title_ne": "गोपनीयता सूचना (HIPAA)",
+      "en": "I acknowledge that I have been offered a copy of the clinic's Notice of Privacy Practices, which explains how my health information may be used and shared for treatment, payment, and health care operations, and my rights to access and correct my records.",
+      "ne": "क्लिनिकले तपाईंको स्वास्थ्य जानकारी कसरी प्रयोग र साझा गर्छ भन्ने सूचनाको एक प्रति तपाईंलाई दिन खोजेको थियो भनेर तपाईं स्वीकार गर्नुहुन्छ। यो जानकारी उपचार, बिल भुक्तानी र क्लिनिकको कामको लागि प्रयोग हुन सक्छ। आफ्नो रेकर्ड हेर्ने र गल्ती सच्याउन लगाउने अधिकार तपाईंलाई छ।"
+    },
+    {
+      "id": "financial",
+      "title_en": "Financial responsibility and cancellations",
+      "title_ne": "पैसा तिर्ने जिम्मेवारी र अपोइन्टमेन्ट रद्द",
+      "en": "I authorize the clinic to bill my insurance and to receive payment directly. I am responsible for copays, deductibles, and any amount my insurance does not cover. I will give at least 24 hours' notice to cancel an appointment, or a $35 missed-visit fee may apply.",
+      "ne": "क्लिनिकले तपाईंको बीमालाई बिल पठाउन र बीमाबाट सिधै पैसा लिन सक्छ। बीमाले नतिरेको रकम, जस्तै कोपे र डिडक्टिबल, तपाईंले तिर्नुपर्छ। अपोइन्टमेन्ट रद्द गर्नुपरे कम्तीमा २४ घण्टा अगाडि खबर गर्नुपर्छ, नत्र $३५ शुल्क लाग्न सक्छ।"
+    }
+  ]
+}

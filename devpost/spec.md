@@ -60,7 +60,7 @@ Gemini's free tier instead of Together; "use 0 credit from Together". Zoho for e
   values and the signature back. https://pymupdf.readthedocs.io/en/latest/widget.html
 - **Google Gen AI SDK (`google-genai`)** for Gemini, with structured JSON output.
   https://ai.google.dev/gemini-api/docs/structured-output
-  - Model: `GEMINI_MODEL`, default `gemini-2.5-flash`.
+  - Model: `GEMINI_MODEL`, default `gemini-3.6-flash` (2.5 Flash is closed to new keys; 3.7 and 3.8 Flash timed out on 2026-10-24).
   - **Unverified:** the current model names and free-tier limits. Google's own pages disagree, so check the live
     limits in AI Studio in build step 1. https://ai.google.dev/gemini-api/docs/rate-limits
 - **`nepali-datetime`** converts Bikram Sambat (Nepali calendar) dates to Gregorian dates.

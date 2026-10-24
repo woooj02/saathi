@@ -99,3 +99,27 @@ def test_parse_strips_code_fences():
     assert gemini._parse('```json\n{"ok": true}\n```') == {"ok": True}
     with pytest.raises(ValueError):
         gemini._parse("[1, 2]")
+
+
+def test_rate_limited_model_falls_back(monkeypatch):
+    """The free tier allows a few calls a minute per model, so a 429 moves on to the fallback model."""
+    used = []
+
+    class Reply:
+        text = '{"en": "Kamala"}'
+
+    class Models:
+        def generate_content(self, model, contents, config):
+            used.append(model)
+            if model == "main":
+                raise RuntimeError("429 RESOURCE_EXHAUSTED")
+            return Reply()
+
+    class Client:
+        models = Models()
+
+    monkeypatch.setattr(gemini, "_get_client", lambda: Client())
+    monkeypatch.setattr(settings, "GEMINI_MODEL", "main")
+    monkeypatch.setattr(settings, "GEMINI_FALLBACK_MODEL", "backup")
+    assert gemini.generate_json("p", {"type": "object"}) == {"en": "Kamala"}
+    assert used == ["main", "backup"]

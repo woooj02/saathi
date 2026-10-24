@@ -10,11 +10,12 @@ load_dotenv(ROOT / ".env")
 DATA_DIR = Path(os.getenv("SAATHI_DATA_DIR", ROOT / "data"))
 FORMS_DIR = DATA_DIR / "forms"
 OUTBOX_DIR = DATA_DIR / "outbox"
-SAMPLES_DIR = ROOT / "samples"
+SAMPLES_DIR = Path(os.getenv("SAATHI_SAMPLES_DIR", ROOT / "samples"))
 WEB_DIR = ROOT / "web"
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash").strip()
+GEMINI_FALLBACK_MODEL = os.getenv("GEMINI_FALLBACK_MODEL", "gemini-3.5-flash").strip()   # used when the main one is rate-limited
 
 MAIL_MODE = os.getenv("MAIL_MODE", "file").strip().lower()
 SMTP_HOST = os.getenv("SMTP_HOST", "smtppro.zoho.com")

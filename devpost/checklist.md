@@ -129,9 +129,9 @@ points.
 
 ## Final Review
 
-- [ ] Live Gemini checks once `GEMINI_API_KEY` is in `.env`: one interpret call per answer kind, and
+- [x] Live Gemini checks once `GEMINI_API_KEY` is in `.env`: one interpret call per answer kind, and
   `scripts/convert_sample.py` to make the sample's questions real Gemini output (slices 4–5)
-- [ ] One real Zoho send once the app password is in `.env` (slice 6), at least 5–10 minutes from any other send
+- [x] One real Zoho send once the app password is in `.env` (slice 6), at least 5–10 minutes from any other send
 - [ ] Learner's Nepali speech test on `/lab` (slice 2), and a check of the Nepali wording, by a native speaker
 - [ ] Final review complete — feedback resolved and learner confirms ready to ship
 
@@ -182,4 +182,15 @@ Activity mode: not started
 - Mail statuses are `sent`, `saved` (file mode), `deferred` (inside the send gap) and `failed`. The patient's Sent
   screen says "sent to the clinic" for sent and saved, and "show this copy at the front desk" otherwise. Verified with
   a fake SMTP server. The one real Zoho send waits for the app password (see Final Review).
-- The `LICENSE` copyright line uses the name from the learner's Devpost profile (Aryan Neopane). Confirm it at ship.
+- The `LICENSE` copyright line uses the name from the learner's Devpost profile (Aryan Neopane). Confirmed by the
+  learner on 2026-10-24.
+- Live Gemini (2026-10-24): `gemini-2.5-flash` is closed to new keys, and 3.7 and 3.8 Flash timed out, so the default
+  model is `gemini-3.6-flash`. The free tier allows 5 calls a minute per model, so a rate-limited or overloaded call
+  moves on to `GEMINI_FALLBACK_MODEL` (`gemini-3.5-flash`). That happened in the live conversion (a 503) and it
+  finished anyway. Every typed or spoken answer kind returned the right English: name, BS date, "yesterday", phone,
+  email, member ID, free text, and "I don't know" coming back as not understood.
+- The sample's questions are now Gemini's live conversion (about 70 s, every box covered, 4 consent sections,
+  nothing needing review). The hand-written version became the tests' fixed copy (`tests/fixtures/sample-form.json`),
+  so tests don't change when the sample is re-converted. A new test checks the shipped sample still fits the PDF.
+- One real Zoho send on 2026-10-24 (13:36), from contact@ to contact@keepsrunning.com: status `sent`, filled PDF
+  attached.

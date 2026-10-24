@@ -1,16 +1,15 @@
 """The sample form's questions, written by hand for the first build.
 
-This stands in for Gemini's conversion of samples/pt-intake/original.pdf until a
-GEMINI_API_KEY is available. It uses exactly the converter's output format, so
-the patient flow can be built and tested with no AI. Once the key is in, slice 5
-converts the PDF live and replaces samples/pt-intake/form.json with Gemini's output.
+It uses exactly the converter's output format. The app's sample now uses Gemini's
+own conversion (scripts/convert_sample.py); this hand-written version is kept as
+the tests' fixed copy, so tests don't change when the sample is re-converted.
 
-    python scripts/sample_questions.py  ->  samples/pt-intake/form.json
+    python scripts/sample_questions.py  ->  tests/fixtures/sample-form.json
 """
 import json
 from pathlib import Path
 
-OUT = Path(__file__).resolve().parent.parent / "samples" / "pt-intake" / "form.json"
+OUT = Path(__file__).resolve().parent.parent / "tests" / "fixtures" / "sample-form.json"
 
 S = {
     "you": ("About you", "तपाईंको बारेमा"),

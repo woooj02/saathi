@@ -9,6 +9,7 @@ from app import converter, gemini, settings
 from app.main import app
 from app.pdf_reader import read_form
 
+
 client = TestClient(app)
 SAMPLE = json.loads((settings.SAMPLES_DIR / "pt-intake" / "form.json").read_text())
 
@@ -124,3 +125,19 @@ def test_convert_without_a_key_says_so(sample_pdf):
 
 def test_sample_cannot_be_edited():
     assert client.patch("/api/forms/sample", headers={"x-edit-key": ""}, json={}).status_code == 403
+
+
+def test_shipped_sample_matches_its_pdf(sample_pdf):
+    """The sample patients see is Gemini's real conversion; it must still fit the PDF exactly."""
+    shipped = json.loads((settings.ROOT / "samples" / "pt-intake" / "form.json").read_text())
+    read = read_form(sample_pdf)
+    by_name = {f["name"]: f for f in read["fields"]}
+    covered = [f for q in shipped["questions"] for f in q["fields"]]
+    assert sorted(covered) == sorted(by_name)
+    for q in shipped["questions"]:
+        box = by_name[q["fields"][0]]
+        if box["kind"] == "radio":
+            assert [o["value"] for o in q["options"]] == [o["value"] for o in box["options"]]
+        if q["kind"] == "multi":
+            assert {o["value"] for o in q["options"]} == set(q["fields"])
+    assert shipped["source"] == "gemini" and shipped["consent"]
