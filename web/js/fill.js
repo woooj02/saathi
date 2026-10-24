@@ -172,7 +172,7 @@ function question() {
     ${L() === "ne" ? `<p class="en-hint" lang="en">${esc(q.en)}</p>` : ""}
     ${q.help_ne && L() === "ne" ? `<p class="help">${esc(q.help_ne)}</p>` : ""}
     <div class="answer" id="answer"></div>
-    <div class="foot">
+    <div class="foot near">
       ${q.optional && TYPED_KINDS.has(q.kind) ? `<button class="btn link skip" data-act="na">${esc(tr("notApplicable"))}</button>` : ""}
       <button class="btn link skip" data-act="skip">${esc(tr("skip"))}</button>
     </div>`);

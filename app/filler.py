@@ -36,6 +36,17 @@ def draw_signature(page, rect: pymupdf.Rect, name: str):
     page.insert_text(baseline, name, fontname="sig", fontsize=size, color=(0.05, 0.05, 0.25))
 
 
+def _fit_text(w) -> None:
+    """Shrink the font of a one-line box so the whole answer shows (e.g. the skip note in a narrow box)."""
+    if w.field_flags & pymupdf.PDF_TX_FIELD_IS_MULTILINE or not w.field_value:
+        return
+    size = w.text_fontsize or 10
+    room = w.rect.width - 4
+    while size > 6 and pymupdf.get_text_length(w.field_value, fontname="helv", fontsize=size) > room:
+        size -= 0.5
+    w.text_fontsize = size
+
+
 def fill_pdf(original: bytes, values: dict, signature: dict | None = None) -> bytes:
     """Return a filled copy of `original`.
 
@@ -56,6 +67,7 @@ def fill_pdf(original: bytes, values: dict, signature: dict | None = None) -> by
             value = values[name]
             if w.field_type == pymupdf.PDF_WIDGET_TYPE_TEXT:
                 w.field_value = "" if value is None else str(value)
+                _fit_text(w)
                 w.update()
             elif w.field_type == pymupdf.PDF_WIDGET_TYPE_CHECKBOX:
                 w.field_value = w.on_state() if value else "Off"

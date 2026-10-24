@@ -199,6 +199,17 @@ def _clean(questions: list[dict], read: dict) -> list[dict]:
     return out
 
 
+ASKED_TO_DO = {"describe", "rate", "choose", "select", "tell", "list", "please", "check", "give", "write", "explain"}
+
+
+def _label_like(q: dict) -> bool:
+    """A question that is just the box's label ("City", "Member ID"): the clinic should reword it before publishing."""
+    if q["kind"] in ("signature", "auto_date", "auto_name", "skip"):
+        return False
+    en = (q.get("en") or "").strip()
+    return "?" not in en and (not en or en.split()[0].lower() not in ASKED_TO_DO)
+
+
 def _covered(questions):
     return {f for q in questions for f in q["fields"]}
 
@@ -223,6 +234,9 @@ def convert(read: dict) -> dict:
     position = {n: i for i, n in enumerate(order)}
     questions.sort(key=lambda q: position[q["fields"][0]])
     questions = _clean(questions, read)   # again, for unique ids across the merged list
+    for q in questions:
+        if _label_like(q):
+            q["needs_review"] = True
     return {
         "form_title_en": data.get("form_title_en") or "Intake form",
         "form_title_ne": data.get("form_title_ne") or "फारम",

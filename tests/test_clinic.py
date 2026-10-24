@@ -152,3 +152,14 @@ def test_yes_no_buttons_are_in_nepali_even_when_the_model_skips_options(sample_p
     out = converter.convert(read_form(sample_pdf))
     yes_no = [q for q in out["questions"] if q["kind"] == "yesno"]
     assert yes_no and all([o["ne"] for o in q["options"]] == ["हो", "होइन"] for q in yes_no)
+
+
+def test_label_like_questions_are_flagged_for_the_clinic(sample_pdf, ai):
+    reply = sample_reply()
+    for q in reply["questions"]:
+        if q["id"] == "address_city":
+            q["en"], q["ne"] = "City", "शहर"
+    ai.append(reply)
+    out = converter.convert(read_form(sample_pdf))
+    flagged = [q["id"] for q in out["questions"] if q.get("needs_review")]
+    assert flagged == ["address_city"]   # full questions and "Describe ..." instructions are left alone

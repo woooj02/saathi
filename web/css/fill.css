@@ -64,6 +64,7 @@
 .segmented button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 
 .foot { margin-top: auto; padding-top: 24px; display: flex; flex-direction: column; gap: 10px; }
+.foot.near { margin-top: 0; padding-top: 8px; gap: 2px; }   /* "I don't have one" / skip, right under the answer */
 .skip { align-self: center; color: var(--grey-4); }
 
 /* review */

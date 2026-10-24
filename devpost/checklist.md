@@ -134,6 +134,12 @@ points.
   `scripts/convert_sample.py` to make the sample's questions real Gemini output (slices 4–5)
 - [x] One real Zoho send once the app password is in `.env` (slice 6), at least 5–10 minutes from any other send
 - [ ] Learner's Nepali speech test on `/lab` (slice 2), and a check of the Nepali wording, by a native speaker
+- [x] Fix (learner, final review): "I don't have one" and skip sit right under the answer, not below the fold on a
+  small phone
+- [x] Fix (learner, final review): the clinic review marks questions that are only a box label ("City") as "Needs
+  your wording"
+- [x] Fix (found in final review): a long answer in a narrow one-line box shrinks to fit ("Patient will provide at
+  visit" was cut off in Group number)
 - [ ] Final review complete — feedback resolved and learner confirms ready to ship
 
 ## Code Tour and App Map
