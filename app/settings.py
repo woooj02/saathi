@@ -15,7 +15,11 @@ WEB_DIR = ROOT / "web"
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash").strip()
-GEMINI_FALLBACK_MODEL = os.getenv("GEMINI_FALLBACK_MODEL", "gemini-3.5-flash").strip()   # used when the main one is rate-limited
+# tried in order when the main model is busy or out of its free daily quota (each model has its own)
+GEMINI_FALLBACK_MODELS = [m.strip() for m in os.getenv(
+    "GEMINI_FALLBACK_MODELS",
+    "gemini-3.5-flash,gemini-3-flash-preview,gemini-3.5-flash-lite,gemini-3.1-flash-lite,gemini-flash-lite-latest",
+).split(",") if m.strip()]
 
 MAIL_MODE = os.getenv("MAIL_MODE", "file").strip().lower()
 SMTP_HOST = os.getenv("SMTP_HOST", "smtppro.zoho.com")

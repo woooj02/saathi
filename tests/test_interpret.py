@@ -143,6 +143,31 @@ def test_rate_limited_model_falls_back(monkeypatch):
 
     monkeypatch.setattr(gemini, "_get_client", lambda: Client())
     monkeypatch.setattr(settings, "GEMINI_MODEL", "main")
-    monkeypatch.setattr(settings, "GEMINI_FALLBACK_MODEL", "backup")
+    monkeypatch.setattr(settings, "GEMINI_FALLBACK_MODELS", ["backup"])
     assert gemini.generate_json("p", {"type": "object"}) == {"en": "Kamala"}
     assert used == ["main", "backup"]
+
+
+def test_model_out_of_daily_quota_is_skipped(monkeypatch):
+    used = []
+
+    class Reply:
+        text = '{"en": "Kamala"}'
+
+    class Models:
+        def generate_content(self, model, contents, config):
+            used.append(model)
+            if model == "main":
+                raise RuntimeError("429 RESOURCE_EXHAUSTED GenerateRequestsPerDayPerProjectPerModel-FreeTier")
+            return Reply()
+
+    class Client:
+        models = Models()
+
+    monkeypatch.setattr(gemini, "_get_client", lambda: Client())
+    monkeypatch.setattr(gemini, "_spent", {})
+    monkeypatch.setattr(settings, "GEMINI_MODEL", "main")
+    monkeypatch.setattr(settings, "GEMINI_FALLBACK_MODELS", ["backup", "spare"])
+    gemini.generate_json("p", {"type": "object"})
+    gemini.generate_json("p", {"type": "object"})
+    assert used == ["main", "backup", "backup"]   # the second call doesn't waste time on the spent model

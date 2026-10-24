@@ -201,5 +201,15 @@ Activity mode: not started
   have one / Doesn't apply), which writes N/A on the form so the clinic can tell it from a missed question.
 - Static files are sent with `Cache-Control: no-cache`, because Chrome kept running an old copy of the page script
   after an update.
+- The free tier turned out to be about 20 calls a day per model, and testing used up `gemini-3.6-flash` and
+  `gemini-3.5-flash` for the day. Gemini now tries a chain of models (`GEMINI_FALLBACK_MODELS`), each with its own
+  daily quota, and skips a model that reports its daily quota spent. The clinic retry then converted with
+  `gemini-3-flash-preview`.
+- That weaker model wrote many questions as bare labels ("City", "Member ID") and left yes/no buttons in English.
+  The conversion prompt now asks for full questions (and क्लिनिक, not अस्पताल, for a clinic), and code gives yes/no
+  buttons हो / होइन whatever the model returns.
+- Final review run in Chrome at phone width (333 px), with the learner watching: clinic setup → conversion → wording
+  edits → publish → patient journey by voice (Nepali clips played into the mic), typing, Nepali-calendar picker,
+  N/A, skip, review, consent, signature → real send at 14:06.
 - One real Zoho send on 2026-10-24 (13:36), from contact@ to contact@keepsrunning.com: status `sent`, filled PDF
   attached.

@@ -54,9 +54,26 @@ def _busy(exc: Exception) -> bool:
     return any(code in str(exc) for code in ("429", "RESOURCE_EXHAUSTED", "503", "504", "UNAVAILABLE", "DEADLINE_EXCEEDED"))
 
 
+# The free tier allows about 20 calls a day per model, so a model that says its daily quota is used up is
+# skipped for a while and the next one in the chain is tried.
+_spent: dict[str, float] = {}
+SPENT_FOR = 3600
+
+
+def _chain(model: str | None) -> list[str]:
+    first = model or settings.GEMINI_MODEL
+    names = [first] + [m for m in settings.GEMINI_FALLBACK_MODELS if m != first]
+    now = time.monotonic()
+    fresh = [m for m in names if _spent.get(m, 0) <= now]
+    return fresh or names
+
+
 def generate_json(prompt: str, schema: dict, *, system: str | None = None, think: bool = False,
                   model: str | None = None, retries: int = 1, audio: tuple[bytes, str] | None = None) -> dict:
-    """audio: (bytes, mime type) of a recording Gemini should listen to along with the prompt."""
+    """audio: (bytes, mime type) of a recording Gemini should listen to along with the prompt.
+
+    Each model in the chain gets one try; with a single model it gets 1 + retries tries.
+    """
     from google.genai import types
 
     client = _get_client()
@@ -68,23 +85,24 @@ def generate_json(prompt: str, schema: dict, *, system: str | None = None, think
         thinking_config=None if think else types.ThinkingConfig(thinking_budget=0),
     )
     contents = [types.Part.from_bytes(data=audio[0], mime_type=audio[1]), prompt] if audio else prompt
-    current = model or settings.GEMINI_MODEL
+    models = _chain(model)
+    tries = models + [models[-1]] * max(0, retries + 1 - len(models))
     last = None
-    for attempt in range(retries + 1):
+    for attempt, current in enumerate(tries, 1):
         try:
             started = time.monotonic()
             resp = client.models.generate_content(model=current, contents=contents, config=config)
             data = _parse(resp.text)
-            log.info("gemini ok in %.1fs", time.monotonic() - started)
+            log.info("gemini ok (%s) in %.1fs", current, time.monotonic() - started)
             return data
         except (ValueError, json.JSONDecodeError) as exc:
             last = exc
-            log.warning("gemini returned unusable JSON (attempt %d): %s", attempt + 1, exc)
+            log.warning("gemini returned unusable JSON (%s, attempt %d): %s", current, attempt, exc)
         except Exception as exc:  # network, 429, 5xx: the SDK raises its own error types
             last = exc
-            log.warning("gemini call failed (attempt %d): %s", attempt + 1, str(exc)[:200])
-            if _busy(exc) and settings.GEMINI_FALLBACK_MODEL and current != settings.GEMINI_FALLBACK_MODEL:
-                current = settings.GEMINI_FALLBACK_MODEL   # the free tier's per-minute limit is per model
-                continue
-            time.sleep(1.5 * (attempt + 1))
+            log.warning("gemini call failed (%s, attempt %d): %s", current, attempt, str(exc)[:200])
+            if "PerDay" in str(exc):
+                _spent[current] = time.monotonic() + SPENT_FOR
+            if not _busy(exc):
+                time.sleep(1.0)
     raise AIError(str(last))

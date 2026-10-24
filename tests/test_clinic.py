@@ -141,3 +141,14 @@ def test_shipped_sample_matches_its_pdf(sample_pdf):
         if q["kind"] == "multi":
             assert {o["value"] for o in q["options"]} == set(q["fields"])
     assert shipped["source"] == "gemini" and shipped["consent"]
+
+
+def test_yes_no_buttons_are_in_nepali_even_when_the_model_skips_options(sample_pdf, ai):
+    reply = sample_reply()
+    for q in reply["questions"]:
+        if q["kind"] == "yesno":
+            q.pop("options")
+    ai.append(reply)
+    out = converter.convert(read_form(sample_pdf))
+    yes_no = [q for q in out["questions"] if q["kind"] == "yesno"]
+    assert yes_no and all([o["ne"] for o in q["options"]] == ["हो", "होइन"] for q in yes_no)

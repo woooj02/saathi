@@ -38,7 +38,10 @@ For questions:
 - The patient's signature box: kind signature. The date next to the signature: kind auto_date. A "printed name"
   box next to the signature: kind auto_name. Boxes only for someone else signing on the patient's behalf, or for
   office use only: kind skip.
-- en: the question in plain English, as a full question. ne: the same question in plain Nepali.
+- en: the question in plain English, as a full question ending in "?", asked to the patient ("What is your ZIP
+  code?", "Which medicines do you take now?"), never just the box's label ("ZIP code", "Current medications").
+  ne: the same question in plain, spoken Nepali, also a full question. Call the place what the form calls it
+  (क्लिनिक for a clinic, अस्पताल only for a hospital). Signature, auto and skip boxes can keep a short label.
 - section_en/section_ne: the form section it's in, short.
 - help_ne (optional): one short Nepali hint, only where it truly helps (e.g. where to find a number).
 - optional: true if the form says "if any" / "if applicable" or most patients won't have it.
@@ -132,11 +135,23 @@ def _fallback(field: dict) -> dict:
         q["kind"] = "yesno" if sorted(values) == ["No", "Yes"] else "choice"
         q["options"] = [{"value": o["value"], "en": o["label"] or o["value"], "ne": o["label"] or o["value"]}
                         for o in field["options"]]
+        _nepali_yes_no(q)
     if kind == "multi":
         q["options"] = [{"value": field["name"], "en": label, "ne": label}]
     if field.get("hint") == "date":
         q["kind"], q["format"] = "date", "MM/DD/YYYY"
     return q
+
+
+YES_NO_NE = {"yes": "हो", "no": "होइन"}
+
+
+def _nepali_yes_no(q: dict) -> None:
+    """A yes/no button the model left in English (or that was rebuilt from the PDF) gets its Nepali word."""
+    for o in q.get("options", []):
+        word = YES_NO_NE.get(str(o.get("value", "")).strip().lower())
+        if word and (not o.get("ne") or o["ne"].strip().lower() in ("yes", "no")):
+            o["ne"] = word
 
 
 def _clean(questions: list[dict], read: dict) -> list[dict]:
@@ -162,6 +177,7 @@ def _clean(questions: list[dict], read: dict) -> list[dict]:
                 q["options"] = [given[v] for v in real]
             if q["kind"] not in ("yesno", "choice", "scale"):
                 q["kind"] = "yesno" if sorted(real) == ["No", "Yes"] else "choice"
+            _nepali_yes_no(q)
             q["fields"] = fields[:1]
         elif q["kind"] == "multi":
             names = {o.get("value") for o in q.get("options", [])}
