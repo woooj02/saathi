@@ -91,6 +91,7 @@ Gemini's free tier instead of Together; "use 0 credit from Together". Zoho for e
 - **Recording:** Chrome on the laptop. Use DevTools device mode at phone size for the patient side, and a normal
   window for the clinic side and the inbox.
 - **Deployment:** optional, decided in `6-ship`. Submission needs the video and the public GitHub repo regardless.
+- **Public repository:** https://github.com/woooj02/saathi (MIT, created 2026-10-24). Video link: to come.
 
 ## Look and Feel
 Carried from `prd.md > Look and Feel` and `scope.md > Inspiration & Identity`.
