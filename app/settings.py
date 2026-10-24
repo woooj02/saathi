@@ -20,6 +20,11 @@ GEMINI_FALLBACK_MODELS = [m.strip() for m in os.getenv(
     "GEMINI_FALLBACK_MODELS",
     "gemini-3.5-flash,gemini-3-flash-preview,gemini-3.5-flash-lite,gemini-3.1-flash-lite,gemini-flash-lite-latest",
 ).split(",") if m.strip()]
+# Gemini text-to-speech, for reading questions aloud in real Nepali (each model has its own daily quota)
+GEMINI_TTS_MODELS = [m.strip() for m in os.getenv(
+    "GEMINI_TTS_MODELS",
+    "gemini-3.8-flash-tts,gemini-3.8-flash-lite-tts,gemini-3.1-flash-tts-preview,gemini-2.5-flash-preview-tts",
+).split(",") if m.strip()]
 
 MAIL_MODE = os.getenv("MAIL_MODE", "file").strip().lower()
 SMTP_HOST = os.getenv("SMTP_HOST", "smtppro.zoho.com")

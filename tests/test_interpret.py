@@ -171,3 +171,46 @@ def test_model_out_of_daily_quota_is_skipped(monkeypatch):
     gemini.generate_json("p", {"type": "object"})
     gemini.generate_json("p", {"type": "object"})
     assert used == ["main", "backup", "backup"]   # the second call doesn't waste time on the spent model
+
+
+def test_story_fills_only_what_holds_up(monkeypatch):
+    """One recording -> many answers, each checked like a single answer; bad ones are dropped."""
+    def fake(prompt, schema, **kw):
+        assert kw["audio"][1] == "audio/webm" and "date_of_birth" in schema["properties"]["answers"]["properties"]
+        return {"story_ne": "म कमला न्यौपाने ...", "answers": {
+            "first_name": {"said_ne": "कमला", "en": "Kamala"},
+            "date_of_birth": {"said_ne": "२०२१ पुस ३०", "calendar": "BS", "year": 2021, "month": 9, "day": 30},
+            "phone": {"said_ne": "तीन शून्य तीन ...", "en": "303 555 0142"},
+            "needs_interpreter": {"said_ne": "दोभाषे चाहिन्छ", "value": "Yes"},
+            "sex": {"said_ne": "?", "value": "Robot"},             # not a real option: dropped
+            "email": {"said_ne": "थाहा छैन", "en": "not sure"},     # not an email: dropped
+            "nope": {"said_ne": "x", "en": "x"},                   # not a question: dropped
+        }}
+    monkeypatch.setattr(gemini, "generate_json", fake)
+    monkeypatch.setattr(settings, "GEMINI_API_KEY", "test-key")
+    r = client.post("/api/forms/sample/story", files={"audio": ("story.webm", b"fake", "audio/webm")})
+    assert r.status_code == 200
+    got = r.json()["answers"]
+    assert set(got) == {"first_name", "date_of_birth", "phone", "needs_interpreter"}
+    assert got["date_of_birth"]["value"] == "01/13/1965" and got["phone"]["value"] == "(303) 555-0142"
+    assert got["needs_interpreter"] == {"value": "Yes", "said": "दोभाषे चाहिन्छ", "en": "Yes", "story": True}
+
+
+def test_questions_are_read_aloud_from_one_recording(monkeypatch):
+    """The first play makes the Nepali recording with Gemini; after that it's served from disk."""
+    from app import voice
+    made = []
+
+    def fake_speech(text, **kw):
+        made.append(text)
+        return b"\x00\x00" * 2400   # 0.1 s of silence
+    monkeypatch.setattr(gemini, "speech_pcm", fake_speech)
+    monkeypatch.setattr(settings, "GEMINI_API_KEY", "test-key")
+    assert client.get("/api/forms/sample").json()["voice"] is True
+    first = client.get("/api/forms/sample/voice/phone")
+    again = client.get("/api/forms/sample/voice/phone")
+    assert first.status_code == again.status_code == 200 and first.content == again.content
+    assert made == [question("phone")["ne"]]
+    assert client.get("/api/forms/sample/voice/story").status_code == 200
+    assert "बताउनुहोस्" in made[-1] or "भन्नुहोस्" in made[-1]   # the screen's line, read from nepali.js
+    assert client.get("/api/forms/sample/voice/not-a-question").status_code == 404

@@ -106,3 +106,34 @@ def generate_json(prompt: str, schema: dict, *, system: str | None = None, think
             if not _busy(exc):
                 time.sleep(1.0)
     raise AIError(str(last))
+
+
+def speech_pcm(text: str, *, style: str, voice: str = "Kore") -> bytes:
+    """Read text aloud with Gemini's text-to-speech; returns 24 kHz, 16-bit mono PCM.
+
+    Tries each model in GEMINI_TTS_MODELS once, skipping models whose daily quota is spent.
+    """
+    from google.genai import types
+
+    client = _get_client()
+    config = types.GenerateContentConfig(
+        response_modalities=["AUDIO"],
+        speech_config=types.SpeechConfig(voice_config=types.VoiceConfig(
+            prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=voice))),
+    )
+    now = time.monotonic()
+    models = [m for m in settings.GEMINI_TTS_MODELS if _spent.get(m, 0) <= now] or settings.GEMINI_TTS_MODELS
+    last = None
+    for current in models:
+        try:
+            started = time.monotonic()
+            resp = client.models.generate_content(model=current, contents=f"{style}\n\n{text}", config=config)
+            pcm = resp.candidates[0].content.parts[0].inline_data.data
+            log.info("gemini speech ok (%s) in %.1fs", current, time.monotonic() - started)
+            return pcm
+        except Exception as exc:  # 429, 5xx, or a reply with no audio
+            last = exc
+            log.warning("gemini speech failed (%s): %s", current, str(exc)[:200])
+            if "PerDay" in str(exc):
+                _spent[current] = time.monotonic() + SPENT_FOR
+    raise AIError(str(last))

@@ -1,4 +1,4 @@
-// Patient journey: welcome → intro → one question per screen → review → consent → sign → sent.
+// Patient journey: welcome → intro → story (tell it once) → one question per screen → review → consent → sign → sent.
 // See devpost/prd.md > The Core Journey (steps 5–11) and devpost/spec.md > Patient Pages.
 
 import { canRecord, recordAnswer, stopRecording, speak, stopSpeaking, canSpeak, ICONS } from "./voice.js";
@@ -52,7 +52,7 @@ const num = (n) => (L() === "ne" ? toNe(n) : String(n));
 const voicePrefs = () => (L() === "ne" ? ["ne", "hi"] : ["en"]);
 
 function screen(html) {
-  stopSpeaking();
+  stopVoice();
   stopRecording();
   app.innerHTML = `<section class="screen">${html}</section>`;
   app.querySelector(".screen").lang = L() === "ne" ? "ne" : "en";
@@ -66,17 +66,36 @@ function go(name) {
   render();
 }
 
-function say(text) {
-  if (speakable) speak(text, { prefer: voicePrefs() }).catch(() => {});
+// Read aloud. In Nepali, a key (question id, consent-<id>, or a screen's name) plays the clinic's real Nepali
+// recording from the server; without one, or when it can't be had, the device's own voice reads the text.
+let playing = null;
+
+function stopVoice() {
+  stopSpeaking();
+  if (playing) { playing.pause(); playing = null; }
 }
 
-function speakerButton(text) {
+function say(text, key) {
+  if (!speakable) return;
+  stopVoice();
+  const device = () => speak(text, { prefer: voicePrefs() }).catch(() => {});
+  if (!key || L() !== "ne" || !form.voice) return device();
+  const audio = new Audio(`/api/forms/${encodeURIComponent(FORM_ID)}/voice/${encodeURIComponent(key)}`);
+  playing = audio;
+  audio.play().catch(() => { if (playing === audio) { playing = null; device(); } });
+}
+
+function speakerButton(text, key = "") {
   if (!speakable) return "";
-  return `<button class="icon-btn" data-say="${esc(text)}" aria-label="${esc(tr("listen"))}">${ICONS.speaker}</button>`;
+  return `<button class="icon-btn" data-say="${esc(text)}" data-key="${esc(key)}" aria-label="${esc(tr("listen"))}">${ICONS.speaker}</button>`;
 }
 
 function wireSpeakers(root) {
-  root.querySelectorAll("[data-say]").forEach((b) => b.addEventListener("click", () => say(b.dataset.say)));
+  root.querySelectorAll("[data-say]").forEach((b) => b.addEventListener("click", () => say(b.dataset.say, b.dataset.key)));
+}
+
+async function findVoice() {
+  speakable = (L() === "ne" && Boolean(form.voice)) || (await canSpeak(voicePrefs()));
 }
 
 function answeredCount() {
@@ -87,7 +106,7 @@ function answeredCount() {
 
 function render() {
   if (!form) return;
-  const draw = { welcome, intro, question, review, consent, sign, sending, sent }[st.screen] || welcome;
+  const draw = { welcome, intro, story, question, review, consent, sign, sending, sent }[st.screen] || welcome;
   draw();
 }
 
@@ -114,7 +133,7 @@ function welcome() {
   root.querySelectorAll("[data-lang]").forEach((b) =>
     b.addEventListener("click", async () => {
       st.lang = b.dataset.lang;
-      speakable = await canSpeak(voicePrefs());
+      await findVoice();
       go("intro");
     }),
   );
@@ -123,11 +142,12 @@ function welcome() {
 function intro() {
   const total = asked.length;
   const resumable = answeredCount() > 0;
+  const body = storyReady() ? tr("introBodyStory") : tr("introBody");
   const root = screen(`
-    <div class="q-top"><button class="icon-btn" data-act="back" aria-label="${esc(tr("back"))}">${ICONS.back}</button><div class="grow"></div>${speakerButton(`${tr("introTitle")}। ${tr("introBody")}`)}</div>
+    <div class="q-top"><button class="icon-btn" data-act="back" aria-label="${esc(tr("back"))}">${ICONS.back}</button><div class="grow"></div>${speakerButton(`${tr("introTitle")}। ${body}`, storyReady() ? "intro-story" : "intro")}</div>
     <div class="grow">
       <h1 class="hero">${esc(tr("introTitle"))}</h1>
-      <p style="font-size:20px">${esc(tr("introBody"))}</p>
+      <p style="font-size:20px">${esc(body)}</p>
       <p class="muted">${esc(tr("introCount", { total, minutes: Math.max(5, Math.round(total * 0.25)) }))}</p>
       ${speakable ? `<label class="toggle"><input type="checkbox" id="autoread" ${st.autoRead ? "checked" : ""}> ${esc(tr("readAloud"))}</label>` : ""}
     </div>
@@ -140,7 +160,7 @@ function intro() {
   wireSpeakers(root);
   root.querySelector("#autoread")?.addEventListener("change", (e) => { st.autoRead = e.target.checked; save(); });
   root.querySelector('[data-act="back"]').addEventListener("click", () => go("welcome"));
-  root.querySelector('[data-act="start"]')?.addEventListener("click", () => { st.index = 0; go("question"); });
+  root.querySelector('[data-act="start"]')?.addEventListener("click", () => { st.index = 0; go(storyReady() ? "story" : "question"); });
   root.querySelector('[data-act="resume"]')?.addEventListener("click", () => {
     const next = asked.findIndex((q) => !st.answers[q.id]);
     st.index = next === -1 ? asked.length - 1 : next;
@@ -148,6 +168,105 @@ function intro() {
   });
   root.querySelector('[data-act="restart"]')?.addEventListener("click", () => {
     st = { ...blankState(), lang: st.lang, screen: "question" };
+    save();
+    render();
+  });
+}
+
+// -- the story: tell it once, and Saathi fills what it heard ---------------------------
+
+function storyReady() {
+  return ai && canRecord();
+}
+
+// the next (step 1) or previous (step -1) question that wasn't already answered by the story
+function openIndex(from, step) {
+  let i = from;
+  while (i >= 0 && i < asked.length && st.answers[asked[i].id]?.story) i += step;
+  return i;
+}
+
+function story() {
+  const root = screen(`
+    <div class="q-top"><button class="icon-btn" data-act="back" aria-label="${esc(tr("back"))}">${ICONS.back}</button><div class="grow"></div>${speakerButton(`${tr("storyTitle")}। ${tr("storyBody")}`, "story")}</div>
+    <div id="story-prompt">
+      <h1 class="question">${esc(tr("storyTitle"))}</h1>
+      <p style="font-size:19px">${esc(tr("storyBody"))}</p>
+      <p class="muted small">${esc(tr("storyTopics"))}</p>
+    </div>
+    <div id="story-area">${micBlock(tr("storyTap"))}</div>
+    <div class="foot near"><button class="btn link skip" data-act="skip-story">${esc(tr("storySkip"))}</button></div>`);
+  wireSpeakers(root);
+  root.querySelector('[data-act="back"]').addEventListener("click", () => go("intro"));
+  root.querySelector('[data-act="skip-story"]').addEventListener("click", () => {
+    st.index = openIndex(0, 1);
+    go(st.index >= asked.length ? "review" : "question");
+  });
+  const area = root.querySelector("#story-area");
+  const filled = asked.filter((q) => st.answers[q.id]?.story);
+  if (filled.length) return storyResult(root, area, filled);
+  if (st.autoRead && speakable) say(`${tr("storyTitle")}। ${tr("storyBody")}`, "story");
+
+  const mic = area.querySelector('[data-act="mic"]');
+  const status = area.querySelector(".status");
+  const level = area.querySelector(".meter span");
+  mic.addEventListener("click", async () => {
+    if (mic.classList.contains("listening")) return stopRecording();
+    stopVoice();
+    mic.classList.add("listening");
+    mic.innerHTML = ICONS.stop;
+    status.textContent = tr("storyListening");
+    try {
+      // older patients pause to think, so wait longer for the end of the story than for one answer
+      const clip = await recordAnswer({ maxSeconds: 120, quietMs: 4000, waitMs: 10000, onLevel: (v) => (level.style.width = `${Math.round(v * 100)}%`) });
+      mic.classList.remove("listening");
+      mic.innerHTML = ICONS.mic;
+      mic.disabled = true;
+      status.textContent = tr("storyUnderstanding");
+      const body = new FormData();
+      body.append("audio", clip.blob, `story.${clip.type.includes("mp4") ? "m4a" : clip.type.includes("ogg") ? "ogg" : "webm"}`);
+      const res = await fetch(`/api/forms/${encodeURIComponent(FORM_ID)}/story`, { method: "POST", body });
+      if (!res.ok) throw new Error(`story ${res.status}`);
+      const r = await res.json();
+      const heard = asked.filter((q) => r.answers[q.id]);
+      if (!heard.length) { status.textContent = tr("storyNothing"); return; }
+      heard.forEach((q) => (st.answers[q.id] = r.answers[q.id]));
+      save();
+      storyResult(root, area, heard);
+    } catch (err) {
+      status.textContent = err.code === "not-allowed" || err.code === "audio-capture" ? tr("micBlocked") : tr("storyNothing");
+    } finally {
+      mic.classList.remove("listening");
+      mic.innerHTML = ICONS.mic;
+      mic.disabled = false;
+    }
+  });
+}
+
+// What the story filled in, both sides, before moving on to the questions that are left.
+function storyResult(root, area, filled) {
+  const left = asked.filter((q) => !st.answers[q.id]).length;
+  root.querySelector(".foot.near")?.remove();
+  root.querySelector("#story-prompt")?.remove();
+  area.innerHTML = `
+    <div class="story-done">
+      <div class="big-check small">${ICONS.check}</div>
+      <h1 class="question">${esc(tr("storyFilled", { n: filled.length }))}</h1>
+      <p class="help">${esc(tr("storyFilledBody", { left }))}</p>
+      <div class="review-list">${filled.map((q) => {
+        const a = st.answers[q.id];
+        return `<div class="review-item static"><div class="rq">${esc(qText(q))}</div><div class="ra">${esc(a.said)}</div>${L() === "ne" && a.en !== a.said ? `<div class="re" lang="en">${esc(a.en)}</div>` : ""}</div>`;
+      }).join("")}</div>
+      <button class="btn primary big" data-act="go">${ICONS.check} ${esc(tr("storyNext"))}</button>
+      <button class="btn big" data-act="again">${esc(tr("storyAgain"))}</button>
+    </div>`;
+  if (st.autoRead && speakable) say(tr("storyFilled", { n: filled.length }));
+  area.querySelector('[data-act="go"]').addEventListener("click", () => {
+    st.index = asked.findIndex((q) => !st.answers[q.id]);
+    go(st.index === -1 ? "review" : "question");
+  });
+  area.querySelector('[data-act="again"]').addEventListener("click", () => {
+    for (const q of asked) if (st.answers[q.id]?.story) delete st.answers[q.id];
     save();
     render();
   });
@@ -164,7 +283,7 @@ function question() {
     <div class="q-top">
       <button class="icon-btn" data-act="back" aria-label="${esc(tr("back"))}">${ICONS.back}</button>
       <div class="progress">${esc(tr("progress", { n: st.index + 1, total }))}</div>
-      ${speakerButton(qText(q))}
+      ${speakerButton(qText(q), q.id)}
     </div>
     <div class="bar"><span style="width:${((st.index + 1) / total) * 100}%"></span></div>
     <div class="section-label">${esc(L() === "ne" ? q.section_ne : q.section_en)}</div>
@@ -187,20 +306,21 @@ function question() {
   else if (q.kind === "date") dateAnswer(q, area, existing);
   else if (q.kind === "multi") multiAnswer(q, area, existing);
   else tapAnswer(q, area, existing);
-  if (st.autoRead && speakable) say(qText(q));
+  if (st.autoRead && speakable) say(qText(q), q.id);
 }
 
 function back() {
   if (st.returnTo === "review") { st.returnTo = null; return go("review"); }
-  if (st.index > 0) { st.index -= 1; return go("question"); }
-  go("intro");
+  const prev = openIndex(st.index - 1, -1);
+  if (prev >= 0) { st.index = prev; return go("question"); }
+  go(storyReady() ? "story" : "intro");
 }
 
 function record(q, rec) {
   st.answers[q.id] = rec;
   save();
   if (st.returnTo === "review") { st.returnTo = null; return go("review"); }
-  st.index += 1;
+  st.index = openIndex(st.index + 1, 1);
   go(st.index >= asked.length ? "review" : "question");
 }
 
@@ -286,12 +406,12 @@ async function interpretAudio(q, { blob, type }) {
   return res.json();   // {ok, said, en, value, parts?}
 }
 
-function micBlock() {
+function micBlock(label = tr("tapToSpeak")) {
   return `
     <div class="speak-area">
-      <button class="mic" data-act="mic" aria-label="${esc(tr("tapToSpeak"))}">${ICONS.mic}</button>
+      <button class="mic" data-act="mic" aria-label="${esc(label)}">${ICONS.mic}</button>
       <div class="meter" aria-hidden="true"><span></span></div>
-      <div class="status" role="status">${esc(tr("tapToSpeak"))}</div>
+      <div class="status" role="status">${esc(label)}</div>
     </div>`;
 }
 
@@ -303,7 +423,7 @@ function wireMic(q, area, onResult) {
   const level = area.querySelector(".meter span");
   mic.addEventListener("click", async () => {
     if (mic.classList.contains("listening")) return stopRecording();
-    stopSpeaking();
+    stopVoice();
     mic.classList.add("listening");
     mic.innerHTML = ICONS.stop;
     status.textContent = tr("listening");
@@ -471,8 +591,9 @@ function review() {
     lastSection = sec;
     const said = !a ? "—" : a.skipped ? tr("skipped") : a.said;
     const en = a && !a.skipped && L() === "ne" && a.en !== a.said ? `<div class="re" lang="en">${esc(a.en)}</div>` : "";
+    const tag = a?.story ? `<span class="from-story">${esc(tr("fromStory"))}</span>` : "";
     return `${head}<button class="review-item ${a?.skipped ? "skipped" : ""}" data-i="${i}">
-      <div class="rq">${esc(qText(q))}</div><div class="ra">${esc(said)}</div>${en}</button>`;
+      <div class="rq">${esc(qText(q))}${tag}</div><div class="ra">${esc(said)}</div>${en}</button>`;
   }).join("");
   const root = screen(`
     <div class="q-top"><button class="icon-btn" data-act="back" aria-label="${esc(tr("back"))}">${ICONS.back}</button><div class="grow"></div></div>
@@ -480,7 +601,11 @@ function review() {
     <p class="help">${esc(tr("reviewBody"))}</p>
     <div class="review-list">${items}</div>
     <div class="foot"><button class="btn primary big" data-act="next">${esc(tr("reviewDone"))}</button></div>`);
-  root.querySelector('[data-act="back"]').addEventListener("click", () => { st.index = asked.length - 1; go("question"); });
+  root.querySelector('[data-act="back"]').addEventListener("click", () => {
+    st.index = openIndex(asked.length - 1, -1);
+    if (st.index < 0) st.index = asked.length - 1;
+    go("question");
+  });
   root.querySelectorAll(".review-item").forEach((b) =>
     b.addEventListener("click", () => { st.index = Number(b.dataset.i); st.returnTo = "review"; go("question"); }),
   );
@@ -492,7 +617,7 @@ function consent() {
     const title = L() === "ne" ? c.title_ne : c.title_en;
     const body = L() === "ne" ? c.ne : c.en;
     return `<div class="consent-card stack">
-      <h3><span>${esc(title)}</span>${speakerButton(`${title}। ${body}`)}</h3>
+      <h3><span>${esc(title)}</span>${speakerButton(`${title}। ${body}`, `consent-${c.id}`)}</h3>
       <p>${esc(body)}</p>
       ${L() === "ne" ? `<details lang="en"><summary>${esc(tr("originalEnglish"))}</summary><p class="small" style="margin-top:8px">${esc(c.en)}</p></details>` : ""}
     </div>`;
@@ -623,7 +748,7 @@ async function boot() {
   }
   asked = form.questions.filter((q) => !AUTO_KINDS.has(q.kind));
   st = loadState();
-  if (st.lang) speakable = await canSpeak(voicePrefs());
+  if (st.lang) await findVoice();
   if (["sending", "sent"].includes(st.screen)) st.screen = "review";   // never resend on reload
   render();
 }

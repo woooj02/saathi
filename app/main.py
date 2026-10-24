@@ -1,6 +1,7 @@
 """Saathi web server: the clinic pages, the patient pages and their small JSON API."""
 import json
 import re
+import subprocess
 from datetime import datetime, timezone
 
 from fastapi import FastAPI, File, Form, Header, HTTPException, Request, UploadFile
@@ -8,7 +9,7 @@ from fastapi.responses import FileResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import answers, converter, gemini, mailer, nepali_dates, settings, store
+from . import answers, converter, gemini, mailer, nepali_dates, settings, store, story, voice
 from .pdf_reader import NotAPdf, NotFillable, read_form
 from .answers_to_pdf import BadAnswer, build_values
 from .filler import fill_pdf
@@ -172,7 +173,27 @@ def get_form(form_id: str):
     form = _load(form_id)
     if form.get("status") != "published":
         raise HTTPException(404, "This form link isn't active.")
-    return store.patient_view(form)
+    # voice: questions can be read aloud in real Nepali (recordings exist, or AI can make them)
+    return {**store.patient_view(form), "voice": gemini.available() or voice.has_any(form_id)}
+
+
+@app.get("/api/forms/{form_id}/voice/{key}")
+def read_aloud(form_id: str, key: str):
+    """A question (or consent section, or screen line) read aloud in Nepali. 404 means: use the device's voice."""
+    form = _load(form_id)
+    text = form.get("status") == "published" and voice.text_for(form, key)
+    if not text:
+        raise HTTPException(404, "Nothing to read.")
+    path = voice.cached(form_id, key, text)
+    if path is None:
+        if not gemini.available():
+            raise HTTPException(404, "No recording yet.")
+        try:
+            path = voice.recording(form_id, key, text)
+        except (gemini.AIError, subprocess.CalledProcessError):
+            raise HTTPException(404, "No recording right now.")
+    media = "audio/mpeg" if path.suffix == ".mp3" else "audio/wav"
+    return FileResponse(path, media_type=media, headers={"Cache-Control": "public, max-age=86400"})
 
 
 class Submission(BaseModel):
@@ -230,6 +251,26 @@ async def interpret_audio(form_id: str, question_id: str = Form(...), audio: Upl
         raise HTTPException(422, "This question is answered by tapping.")
     except gemini.AIError:
         raise HTTPException(502, "Couldn't understand the answer right now.")
+
+
+@app.post("/api/forms/{form_id}/story")
+async def tell_story(form_id: str, audio: UploadFile = File(...)):
+    """The patient tells their story once; every answer Gemini clearly heard comes back, checked like single answers."""
+    form = _load(form_id)
+    if not gemini.available():
+        raise HTTPException(503, "AI is not configured; answer the questions one by one instead.")
+    mime = (audio.content_type or "").split(";")[0].strip().lower()
+    if mime not in AUDIO_TYPES:
+        raise HTTPException(415, "Unsupported recording format.")
+    data = await audio.read(MAX_AUDIO + 1)
+    if len(data) > MAX_AUDIO:
+        raise HTTPException(413, "The recording is too long.")
+    if not data:
+        return {"said": "", "answers": {}}
+    try:
+        return story.extract(form, data, mime)
+    except gemini.AIError:
+        raise HTTPException(502, "Couldn't understand the story right now.")
 
 
 @app.post("/api/forms/{form_id}/submit")
