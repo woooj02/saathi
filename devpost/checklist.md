@@ -86,7 +86,7 @@ points.
   Learner check: On a text question, speak an answer in Nepali and check that the English on the card is right.
   Commit: `Turn spoken Nepali answers into English`
 
-- [ ] **5. A clinic uploads its PDF and gets a patient link**
+- [x] **5. A clinic uploads its PDF and gets a patient link**
   Becomes usable: `/clinic`: enter the name and email, upload a fillable PDF, and Gemini converts it. Review and edit
   the English and Nepali wording, publish, then copy the patient link and preview it as a patient. Non-PDF,
   not-fillable and conversion-failed states each show a clear message.
@@ -129,6 +129,10 @@ points.
 
 ## Final Review
 
+- [ ] Live Gemini checks once `GEMINI_API_KEY` is in `.env`: one interpret call per answer kind, and
+  `scripts/convert_sample.py` to make the sample's questions real Gemini output (slices 4–5)
+- [ ] One real Zoho send once the app password is in `.env` (slice 6), at least 5–10 minutes from any other send
+- [ ] Learner's Nepali speech test on `/lab` (slice 2), and a check of the Nepali wording, by a native speaker
 - [ ] Final review complete — feedback resolved and learner confirms ready to ship
 
 ## Code Tour and App Map
@@ -166,3 +170,12 @@ Activity mode: not started
   can only be tried by a person at a microphone.
 - Typed Nepali also goes through the interpreter, not just speech, so a patient can type in Devanagari once AI is on.
   Phone numbers, codes and email are cleaned up in code after Gemini, not trusted as-is.
+- Clinic setup is two calls, not one. `POST /api/forms` reads the boxes in under a second and returns the count, then
+  `POST /api/forms/{id}/convert` runs Gemini. This lets the progress screen show real steps, and lets a failed
+  conversion be retried without uploading again. Editing and publishing need a per-form edit key, which the clinic's
+  browser keeps, so a patient with the link can't change the form.
+- The converter checks Gemini's output against the PDF. Every box is covered exactly once, and radio option values are
+  the PDF's real export values. Boxes Gemini misses get a second, smaller call, then a plain fallback marked "Needs
+  your wording" for the clinic. Verified with a fake Gemini (tests, and a browser run of
+  upload → convert → edit → publish → patient link). The live conversion waits for the key (see Final Review).
+- Patient links use `PUBLIC_BASE_URL` if set, else the address the clinic page was opened on.

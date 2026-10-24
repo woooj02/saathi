@@ -58,6 +58,25 @@ def save(form: dict, pdf: bytes | None = None) -> dict:
     return form
 
 
+def save_read(form_id: str, read: dict):
+    (_folder(form_id) / "fields.json").write_text(json.dumps(read, ensure_ascii=False, indent=2))
+
+
+def load_read(form_id: str) -> dict:
+    path = _folder(form_id) / "fields.json"
+    if not path.exists():
+        raise FormNotFound(form_id)
+    return json.loads(path.read_text())
+
+
+def new_edit_key() -> str:
+    return secrets.token_urlsafe(16)
+
+
+def clinic_view(form: dict) -> dict:
+    return {k: v for k, v in form.items() if k != "edit_key"}
+
+
 def patient_view(form: dict) -> dict:
     """What the patient's phone needs: no clinic email, no internal bookkeeping."""
     keep = ("id", "clinic_name", "form_title_en", "form_title_ne", "questions", "consent")

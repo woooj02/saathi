@@ -3,12 +3,13 @@ import json
 import re
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, File, Form, Header, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import answers, gemini, mailer, nepali_dates, settings, store
+from . import answers, converter, gemini, mailer, nepali_dates, settings, store
+from .pdf_reader import NotAPdf, NotFillable, read_form
 from .answers_to_pdf import BadAnswer, build_values
 from .filler import fill_pdf
 
@@ -40,6 +41,116 @@ async def lab_results(request: Request):
     runs.append(body)
     path.write_text(json.dumps(runs, ensure_ascii=False, indent=2))
     return {"ok": True, "runs": len(runs)}
+
+
+# -- clinic side --------------------------------------------------------------
+
+MAX_PDF_BYTES = 15 * 1024 * 1024
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+@app.get("/clinic")
+def clinic_page():
+    return page("clinic.html")
+
+
+@app.get("/samples/pt-intake.pdf")
+def sample_pdf():
+    """The sample form, so a clinic (or a judge) can try the upload without their own PDF."""
+    return FileResponse(settings.SAMPLES_DIR / "pt-intake" / "original.pdf", media_type="application/pdf",
+                        filename="riverbend-pt-intake-sample.pdf")
+
+
+def _clinic_form(form_id: str, edit_key: str | None) -> dict:
+    form = _load(form_id)
+    if form_id == store.SAMPLE_ID or not edit_key or edit_key != form.get("edit_key"):
+        raise HTTPException(403, "This link can't edit that form.")
+    return form
+
+
+@app.post("/api/forms")
+async def upload_form(clinic_name: str = Form(..., min_length=2, max_length=120),
+                      clinic_email: str = Form(..., max_length=200),
+                      pdf: UploadFile = File(...)):
+    """Step 1 of setup: read the PDF's boxes (no AI, fast)."""
+    clinic_email = clinic_email.strip()
+    if not EMAIL_RE.match(clinic_email):
+        raise HTTPException(422, "Please enter the clinic's email address.")
+    data = await pdf.read(MAX_PDF_BYTES + 1)
+    if len(data) > MAX_PDF_BYTES:
+        raise HTTPException(413, "That PDF is larger than 15 MB.")
+    try:
+        read = read_form(data)
+    except NotAPdf:
+        raise HTTPException(400, "That file isn't a PDF. Please choose your intake form as a PDF.")
+    except NotFillable:
+        raise HTTPException(422, "This PDF has no fillable boxes. Saathi needs a fillable PDF form.")
+    form = {"id": store.new_id(), "edit_key": store.new_edit_key(), "clinic_name": " ".join(clinic_name.split()),
+            "clinic_email": clinic_email, "status": "reading", "source": "gemini", "questions": [], "consent": [],
+            "pages": read["pages"], "box_count": len(read["fields"]), "file_name": pdf.filename}
+    store.save(form, pdf=data)
+    store.save_read(form["id"], read)
+    return {"id": form["id"], "edit_key": form["edit_key"], "pages": read["pages"], "box_count": len(read["fields"])}
+
+
+@app.post("/api/forms/{form_id}/convert")
+def convert_form(form_id: str, x_edit_key: str = Header(None)):
+    """Step 2 of setup: Gemini writes the English and Nepali questions (slow: tens of seconds)."""
+    form = _clinic_form(form_id, x_edit_key)
+    if not gemini.available():
+        raise HTTPException(503, "AI is not configured on this server, so a new form can't be converted yet.")
+    try:
+        result = converter.convert(store.load_read(form_id))
+    except gemini.AIError:
+        raise HTTPException(502, "Converting the form didn't work this time. Please try again.")
+    form.update(result)
+    form["status"] = "draft"
+    store.save(form)
+    return store.clinic_view(form)
+
+
+@app.get("/api/clinic/forms/{form_id}")
+def clinic_form(form_id: str, x_edit_key: str = Header(None)):
+    return store.clinic_view(_clinic_form(form_id, x_edit_key))
+
+
+class Wording(BaseModel):
+    questions: list[dict] = Field(default_factory=list)   # [{id, en?, ne?, help_ne?}]
+    consent: list[dict] = Field(default_factory=list)     # [{id, ne?, title_ne?}]
+
+
+@app.patch("/api/forms/{form_id}")
+def edit_wording(form_id: str, body: Wording, x_edit_key: str = Header(None)):
+    """The clinic fixes wording. Only text changes; which boxes a question fills stays as the PDF says."""
+    form = _clinic_form(form_id, x_edit_key)
+    by_id = {q["id"]: q for q in form["questions"]}
+    for edit in body.questions:
+        q = by_id.get(edit.get("id"))
+        if not q:
+            continue
+        for key in ("en", "ne", "help_ne"):
+            if isinstance(edit.get(key), str):
+                q[key] = edit[key].strip()[:600]
+        q.pop("needs_review", None)
+    consent = {c["id"]: c for c in form["consent"]}
+    for edit in body.consent:
+        c = consent.get(edit.get("id"))
+        for key in ("ne", "title_ne"):
+            if c and isinstance(edit.get(key), str):
+                c[key] = edit[key].strip()[:3000]
+    store.save(form)
+    return store.clinic_view(form)
+
+
+@app.post("/api/forms/{form_id}/publish")
+def publish(form_id: str, request: Request, x_edit_key: str = Header(None)):
+    form = _clinic_form(form_id, x_edit_key)
+    if not form["questions"]:
+        raise HTTPException(409, "Convert the form before publishing it.")
+    form["status"] = "published"
+    store.save(form)
+    base = settings.PUBLIC_BASE_URL or str(request.base_url).rstrip("/")
+    return {"link": f"{base}/f/{form_id}"}
 
 
 # -- patient side -------------------------------------------------------------
@@ -135,7 +246,7 @@ def bs_month_length(year: int, month: int):
 
 @app.get("/")
 def home():
-    return RedirectResponse("/f/sample")
+    return RedirectResponse("/clinic")
 
 
 app.mount("/static", StaticFiles(directory=settings.WEB_DIR), name="static")

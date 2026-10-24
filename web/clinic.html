@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saathi for clinics</title>
+<link rel="stylesheet" href="/static/css/saathi.css">
+<style>
+  .lead { font-size: 20px; color: var(--grey-4); max-width: 640px; }
+  .drop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center;
+          min-height: 150px; border: 1.5px dashed var(--ink); border-radius: var(--radius); padding: 20px; cursor: pointer; }
+  .drop.over { background: var(--grey-1); }
+  .drop strong { font-size: 18px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
+  .steps { list-style: none; padding: 0; margin: 0; }
+  .steps li { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--grey-2); font-size: 18px; }
+  .steps .dot { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--grey-2); flex: none; display: flex; align-items: center; justify-content: center; }
+  .steps .done .dot { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+  .steps .doing .dot { border-color: var(--ink); border-top-color: transparent; animation: spin .9s linear infinite; }
+  .steps .dot svg { width: 16px; height: 16px; }
+  .steps .muted { margin-left: auto; font-size: 15px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .stats { display: flex; gap: 28px; flex-wrap: wrap; }
+  .stat b { display: block; font-size: 32px; line-height: 1.1; }
+  .stat span { font-size: 15px; color: var(--grey-4); }
+  .sec-title { font-size: 14px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin: 30px 0 8px; display: flex; gap: 10px; align-items: baseline; }
+  .sec-title .ne { text-transform: none; letter-spacing: 0; color: var(--grey-4); font-weight: 600; }
+  .qrow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; padding: 16px 0; border-bottom: 1px solid var(--grey-2); }
+  .qrow .meta { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 14px; }
+  .qrow .meta .from { color: var(--grey-4); }
+  .qrow textarea { min-height: 56px; font-size: 16px; padding: 10px 12px; resize: vertical; }
+  .qrow textarea.ne { font-size: 17px; }
+  .qrow .opts { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
+  .qrow .opts span { font-size: 14px; border: 1px solid var(--grey-2); border-radius: 999px; padding: 2px 10px; }
+  .qrow.auto { grid-template-columns: 1fr; color: var(--grey-4); }
+  .qrow.review { background: var(--grey-1); border: 1.5px dashed var(--ink); border-radius: var(--radius); padding: 14px; }
+  @media (max-width: 640px) { .qrow { grid-template-columns: 1fr; } }
+  .sticky { position: sticky; bottom: 0; background: linear-gradient(to top, #fff 70%, rgba(255,255,255,0)); padding: 24px 0 18px; display: flex; gap: 12px; align-items: center; }
+  .saved { font-size: 15px; color: var(--grey-4); }
+  .linkbox { display: flex; gap: 10px; align-items: center; border: 1.5px solid var(--ink); border-radius: var(--radius); padding: 10px 10px 10px 16px; }
+  .linkbox code { flex: 1; font-size: 18px; overflow-wrap: anywhere; }
+  .error-box { border: 1.5px solid var(--ink); border-radius: var(--radius); padding: 14px 16px; font-weight: 600; }
+  .error-box::before { content: "! "; }
+</style>
+</head>
+<body>
+<main class="page">
+  <div class="topbar"><div class="brand">Saathi <span class="ne">साथी</span></div><span class="tag quiet">For clinics</span></div>
+  <div id="view" style="margin-top:28px"></div>
+</main>
+<script type="module" src="/static/js/clinic.js"></script>
+</body>
+</html>

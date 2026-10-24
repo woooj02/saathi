@@ -24,7 +24,8 @@ SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 MAIL_FROM = os.getenv("MAIL_FROM", "Saathi <contact@keepsrunning.com>")
 MIN_SEND_GAP_SECONDS = int(os.getenv("MIN_SEND_GAP_SECONDS", "300"))
 
-PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://localhost:8010").rstrip("/")
+# Patient links are built from this when set (e.g. on a deployed server), else from the request.
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
 
 for d in (FORMS_DIR, OUTBOX_DIR):
     d.mkdir(parents=True, exist_ok=True)
