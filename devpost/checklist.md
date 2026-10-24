@@ -126,21 +126,22 @@ points.
 - [x] Early usable behavior explored — after slice 3 (patient journey on the sample form), plus the slice 2 speech
   test. Done 2026-10-24, after all slices: the learner's feedback was that middle name had no "I don't have one"
   answer, and the mic didn't hear Nepali. Both fixed (see Revisions); the learner retried the mic: "worked fine".
-- [ ] Final kick-the-tires exploration and feedback completed
+- [x] Final kick-the-tires exploration and feedback completed (run in Chrome with the learner supervising,
+  2026-10-24; their requests A and B plus the fit fix are under Final Review)
 
 ## Final Review
 
 - [x] Live Gemini checks once `GEMINI_API_KEY` is in `.env`: one interpret call per answer kind, and
   `scripts/convert_sample.py` to make the sample's questions real Gemini output (slices 4–5)
 - [x] One real Zoho send once the app password is in `.env` (slice 6), at least 5–10 minutes from any other send
-- [ ] Learner's Nepali speech test on `/lab` (slice 2), and a check of the Nepali wording, by a native speaker
+- [x] Learner's Nepali speech test on `/lab` (slice 2), and a check of the Nepali wording, by a native speaker
 - [x] Fix (learner, final review): "I don't have one" and skip sit right under the answer, not below the fold on a
   small phone
 - [x] Fix (learner, final review): the clinic review marks questions that are only a box label ("City") as "Needs
   your wording"
 - [x] Fix (found in final review): a long answer in a narrow one-line box shrinks to fit ("Patient will provide at
   visit" was cut off in Group number)
-- [ ] Final review complete — feedback resolved and learner confirms ready to ship
+- [x] Final review complete — feedback resolved and learner confirms ready to ship ("yep ready to ship", 2026-10-24)
 
 ## Code Tour and App Map
 
