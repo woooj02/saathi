@@ -1,5 +1,5 @@
-// Voice: listening (Chrome speech recognition) and reading aloud (the device's voices).
-// See devpost/spec.md > Voice. Both are free browser features; nothing here calls an AI.
+// Voice: recording the patient's answer, Chrome speech recognition (used by /lab), and reading aloud.
+// See devpost/spec.md > Voice. The recording is sent to the server, where Gemini listens to it.
 
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -89,6 +89,69 @@ export function stopListening() {
 
 export function isListening() {
   return active !== null;
+}
+
+// -- recording an answer (Gemini listens to it on the server) ----------------
+
+export function canRecord() {
+  return Boolean(navigator.mediaDevices?.getUserMedia && window.MediaRecorder && window.isSecureContext);
+}
+
+let recording = null;
+
+// Record one spoken answer and resolve with {blob, type}. Stops by itself after a quiet
+// pause once the patient has spoken, or when stopRecording() is called (tapping the mic again).
+// onLevel(0..1) is called many times a second so the page can show that the mic hears them.
+export async function recordAnswer({ onLevel, maxSeconds = 30, quietMs = 1800, waitMs = 8000 } = {}) {
+  stopRecording();
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+  } catch (err) {
+    throw new VoiceError(err.name === "NotAllowedError" ? "not-allowed" : "audio-capture", err.message);
+  }
+  const type = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"].find((t) => MediaRecorder.isTypeSupported(t)) || "";
+  const rec = new MediaRecorder(stream, type ? { mimeType: type } : undefined);
+  const ctx = new AudioContext();
+  ctx.resume().catch(() => {});   // some browsers start it suspended
+  const analyser = ctx.createAnalyser();
+  analyser.fftSize = 1024;
+  ctx.createMediaStreamSource(stream).connect(analyser);
+  const samples = new Float32Array(analyser.fftSize);
+  const chunks = [];
+  recording = rec;
+
+  return new Promise((resolve, reject) => {
+    const started = performance.now();
+    let floor = null, heardAt = 0, lastLoud = 0;
+    const tick = () => {
+      analyser.getFloatTimeDomainData(samples);
+      const rms = Math.sqrt(samples.reduce((sum, x) => sum + x * x, 0) / samples.length);
+      const now = performance.now();
+      if (now - started < 300) floor = Math.max(floor ?? 0, rms);   // the room's own noise, before they start
+      const loud = rms > Math.max(0.015, (floor ?? 0) * 2.5);
+      if (loud) { lastLoud = now; if (!heardAt) heardAt = now; }
+      onLevel?.(Math.min(1, rms * 8));
+      const done = (heardAt && now - lastLoud > quietMs) || (!heardAt && now - started > waitMs) || now - started > maxSeconds * 1000;
+      if (done && rec.state !== "inactive") rec.stop();
+    };
+    rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+    rec.onstop = () => {
+      clearInterval(timer);
+      stream.getTracks().forEach((t) => t.stop());
+      ctx.close();
+      onLevel?.(0);
+      if (recording === rec) recording = null;
+      if (!heardAt) return reject(new VoiceError("no-speech"));
+      resolve({ blob: new Blob(chunks, { type: rec.mimeType || type }), type: rec.mimeType || type });
+    };
+    rec.start();
+    const timer = setInterval(tick, 50);
+  });
+}
+
+export function stopRecording() {
+  if (recording && recording.state !== "inactive") recording.stop();
 }
 
 // -- reading aloud ----------------------------------------------------------

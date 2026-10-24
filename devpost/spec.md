@@ -15,9 +15,10 @@ the patient.
   plain Nepali question for each box. Gemini also writes a Nepali explanation of each consent paragraph. The result
   is saved as one file next to the PDF. The clinic checks and edits the wording, then publishes.
 - **The patient opens the link on their phone.** The page asks each question in Nepali and reads it aloud with the
-  device's own voice. The patient speaks, and **Chrome's built-in speech recognition** turns the Nepali speech into
-  Nepali text, for free. Yes/no, choice, scale and date questions need no AI. Only spoken free-text answers go to
-  Gemini, which turns them into clean English. For dates, Gemini only works out what date was said; plain code then
+  device's own voice. The patient speaks, the page records a short clip, and **Gemini listens to it** and writes
+  both the Nepali it heard and the English for the form, in one call. (Chrome's built-in recognition was the first
+  plan, but it returned nothing for Nepali on the learner's machine; see `Decisions and Open Issues`.) Yes/no,
+  choice, scale and date questions need no AI. Only spoken or Nepali-typed answers go to Gemini. For dates, Gemini only works out what date was said; plain code then
   converts Nepali-calendar dates to English dates, so the conversion is exact. The answers wait on the phone (a sticky
   note the browser keeps for this site) until the patient sends.
 - **When the patient sends,** the server writes the English answers and the typed signature into the clinic's
@@ -38,8 +39,10 @@ PRD ref: `prd.md > The Core Journey`.
    `POST /api/forms/<id>/publish`. → The clinic sees the patient link `/f/<id>` and a copy button.
 3. The patient opens `/f/<id>`. The browser loads the published form with `GET /api/forms/<id>`. → Welcome, then
    the language choice, then the intro.
-4. On each question, `Voice` reads the Nepali text aloud. The patient taps the mic, and `Voice` returns Nepali text.
-   - For **text and name** answers, the browser calls `POST /api/forms/<id>/interpret`. → `Answer Interpreter`
+4. On each question, `Voice` reads the Nepali text aloud. The patient taps the mic, and `Voice` records until they
+   pause.
+   - For **text and name** answers, the browser sends the clip to `POST /api/forms/<id>/interpret-audio` (typed
+     Nepali goes to `POST /api/forms/<id>/interpret`). → `Answer Interpreter`
      (Gemini) returns Nepali and English. → The "both sides" card appears.
    - For **dates**, the same call returns the date that was said. → `Nepali Dates` converts it to an English date.
      → The "both sides" card appears.
@@ -65,10 +68,9 @@ Gemini's free tier instead of Together; "use 0 credit from Together". Zoho for e
     limits in AI Studio in build step 1. https://ai.google.dev/gemini-api/docs/rate-limits
 - **`nepali-datetime`** converts Bikram Sambat (Nepali calendar) dates to Gregorian dates.
   https://pypi.org/project/nepali-datetime/
-- **Browser Web Speech API.** `SpeechRecognition` with `lang = "ne-NP"` for listening, and `speechSynthesis` for
-  reading aloud. https://developer.mozilla.org/docs/Web/API/Web_Speech_API
-  - **Unverified:** Nepali recognition quality in Chrome, and which Nepali voice exists on the recording device.
-    Build step 1 tests both (see `Decisions and Open Issues`).
+- **Browser audio.** `MediaRecorder` records the answer (WebM/Opus in Chrome), and `speechSynthesis` reads aloud.
+  https://developer.mozilla.org/docs/Web/API/MediaRecorder ·
+  https://developer.mozilla.org/docs/Web/API/Web_Speech_API (`SpeechRecognition` is now only used by `/lab`).
 - **Python's built-in `smtplib`** for Zoho SMTP. https://www.zoho.com/mail/help/zoho-smtp.html
 - **Fonts:** Inter for Latin text, Noto Sans Devanagari for Nepali, and a handwriting-style font (Dancing Script, open
   licence) for the signature. All are bundled locally in `web/fonts/` so the app works offline.
@@ -79,7 +81,7 @@ Gemini's free tier instead of Together; "use 0 credit from Together". Zoho for e
   - `/clinic` is the clinic side.
   - `/f/<id>` is the patient side.
   - `/f/sample` is the pre-converted sample form.
-- **Needs Python 3.12 and Google Chrome.** Speech recognition requires Chrome, on a secure origin; `localhost` counts.
+- **Needs Python 3.12 and a modern browser.** Recording needs a secure origin; `localhost` counts.
 - **Keys, in `.env`, which the learner fills in.** They are never pasted in chat. `.env.example` lists them:
   - `GEMINI_API_KEY`, and optionally `GEMINI_MODEL`.
   - `MAIL_MODE=file|send`. The default is `file`.
@@ -202,11 +204,13 @@ PRD ref: `prd.md > Answering a Question`, `prd.md > Review`, `prd.md > Consent a
 
 ### Voice
 `web/js/voice.js`.
-- `listen()` wraps `SpeechRecognition` (ne-NP) and resolves with a Nepali transcript, or rejects with
-  `no-speech`, `not-allowed` or `unsupported`.
+- `recordAnswer({onLevel})` records one answer with `MediaRecorder`. A level bar shows the mic hears the patient.
+  It stops by itself 1.8 s after they stop talking (or when the mic is tapped again), and rejects with `no-speech`
+  if nothing louder than the room was heard within 8 s, or `not-allowed` / `audio-capture`.
+- `listen()` wraps `SpeechRecognition` (ne-NP). Only the `/lab` test page uses it now.
 - `speak(text)` picks a `ne-NP` voice, then a `hi-*` voice as a fallback, since it reads Devanagari. If there is
   none, the speaker button is hidden.
-- If recognition is unsupported or blocked, the mic button is hidden and the type option becomes primary.
+- If recording is unsupported or AI is off, the mic button is hidden and the type option becomes primary.
 PRD ref: `prd.md > Answering a Question`, `prd.md > States and Boundaries` ("Microphone blocked").
 
 ### Sample Form
@@ -296,10 +300,10 @@ build-with-ai/
   sends.
 - **Cost:** $0, using the existing account.
 
-### Browser speech (Chrome)
-- **What it is:** speech recognition (`ne-NP`) through Chrome's built-in service, and the device voices for reading
-  aloud. https://developer.mozilla.org/docs/Web/API/Web_Speech_API
-- **Requirements:** a secure origin, and Chrome.
+### Browser audio
+- **What it is:** `MediaRecorder` for recording answers, and the device voices for reading aloud.
+  https://developer.mozilla.org/docs/Web/API/MediaRecorder
+- **Requirements:** a secure origin.
 - **Cost:** $0.
 
 ## Important Failure Modes
@@ -319,8 +323,9 @@ build-with-ai/
 - **JSON files in folders instead of a database.** One form per clinic and no logins, so a database adds nothing. A
   real version would use Postgres with clinic accounts.
 - **Clinic "sign-up" is a setup form without a password.** Agreed in scope. Real auth is deferred.
-- **Chrome speech recognition instead of a paid speech API.** It's free and fast to try. If it handles Nepali badly,
-  the fallback (agreed in build step 1) is Gemini listening to a short recording, at the cost of one call per answer.
+- **Gemini listens to the recording.** Chrome's free recognition was tried first and heard nothing in Nepali on the
+  learner's machine, so the agreed fallback is in use: one Gemini call per spoken answer does both the hearing and
+  the English. It also works in browsers without Chrome's recognition.
 - **Read-aloud uses the device's voice.** Nepali voices vary by device, and Hindi voices read Devanagari as a
   fallback. A real version could pre-generate Nepali audio per question.
 - **Sample form and saved conversion for demos.** The kernel stays real: any uploaded fillable PDF is converted live
@@ -350,8 +355,13 @@ result here.
 - Sender address: `contact@keepsrunning.com`. The learner chose it.
 
 ### Still open
-- The current Gemini model name and free-tier limits. Verify in build step 1.
+- The current Gemini model name and free-tier limits. Verified 2026-10-24: `gemini-3.6-flash`, 5 calls a minute
+  per model on the free tier, with `gemini-3.5-flash` as the fallback.
 - Nepali voice availability on Linux Chrome. Checked in build step 1.
 - Build step 1 finding (automatic part): on the learner's Linux Chrome, `SpeechRecognition` exists and accepts
   `ne-NP`. There's no Nepali voice for reading aloud, only "Google हिन्दी" (hi-IN, online), which Saathi uses as the
-  fallback. The quality of the learner's spoken test is still pending.
+  fallback.
+- Build step 1 finding (learner's spoken test, 2026-10-24): Chrome's `ne-NP` recognition started and opened the mic
+  without an error but returned no words for any of the 6 answers. So `Voice` now records the answer and Gemini
+  listens to it. Checked with Nepali test clips (name, accident story, spoken phone digits): all three came back
+  right in about 2 s.

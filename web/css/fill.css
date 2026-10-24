@@ -41,7 +41,8 @@
 
 .speak-area { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 0 8px; }
 .speak-area .status { min-height: 28px; font-size: 18px; color: var(--grey-4); text-align: center; }
-.speak-area .live { font-size: 22px; text-align: center; min-height: 34px; }
+.speak-area .meter { width: 160px; height: 6px; border-radius: 999px; background: var(--grey-2); overflow: hidden; }
+.speak-area .meter span { display: block; height: 100%; width: 0; background: var(--ink); transition: width 80ms linear; }
 
 .type-row { display: flex; gap: 8px; }
 .type-row input, .type-row textarea { font-size: 20px; }

@@ -86,6 +86,29 @@ def test_route_with_fake_ai(fake_ai):
     assert client.post("/api/forms/sample/interpret", json={"question_id": "nope", "transcript": "x"}).status_code == 404
 
 
+def test_spoken_answer_is_sent_as_audio(monkeypatch):
+    """The recording goes to Gemini as audio; the reply is checked like a typed answer."""
+    sent = {}
+
+    def fake(prompt, schema, **kw):
+        sent.update(prompt=prompt, audio=kw.get("audio"))
+        return {"ok": True, "said_ne": "मेरो फोन तीन शून्य तीन ...", "en": "3035550142"}
+    monkeypatch.setattr(gemini, "generate_json", fake)
+    monkeypatch.setattr(settings, "GEMINI_API_KEY", "test-key")
+    clip = b"\x1aE\xdf\xa3 fake webm"
+    r = client.post("/api/forms/sample/interpret-audio", data={"question_id": "phone"},
+                    files={"audio": ("answer.webm", clip, "audio/webm;codecs=opus")})
+    assert r.status_code == 200 and r.json()["en"] == "(303) 555-0142"
+    assert sent["audio"] == (clip, "audio/webm")
+    assert "attached audio recording" in sent["prompt"]
+    bad = client.post("/api/forms/sample/interpret-audio", data={"question_id": "phone"},
+                      files={"audio": ("x.txt", b"hello", "text/plain")})
+    assert bad.status_code == 415
+    tap = client.post("/api/forms/sample/interpret-audio", data={"question_id": "sex"},
+                      files={"audio": ("answer.webm", clip, "audio/webm")})
+    assert tap.status_code == 422
+
+
 def test_ai_failure_is_a_502(monkeypatch):
     def boom(*a, **k):
         raise gemini.AIError("quota")

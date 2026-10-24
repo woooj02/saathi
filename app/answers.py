@@ -1,7 +1,7 @@
 """Answer Interpreter: a patient's Nepali answer to one question -> the English for the form.
 
-Gemini cleans up the speech-recognition text using the question as context and
-writes the English. Plain code does the parts that must be exact: date
+Gemini listens to the patient's recording (or reads what they typed), using the
+question as context, and writes the English. Plain code does the parts that must be exact: date
 arithmetic, digit handling and phone formatting.
 """
 from __future__ import annotations
@@ -15,15 +15,15 @@ INTERPRETED_KINDS = {"text", "name", "number", "code", "email", "date"}
 DEVANAGARI = re.compile(r"[ऀ-ॿ]")
 
 SYSTEM = """You help an older Nepali-speaking patient fill in a United States clinic's English intake form.
-You get one question from the form and the patient's answer. The answer came from speech recognition, or the
-patient typed it, so it may contain recognition mistakes, Nepali number words or a mix of Nepali and English.
+You get one question from the form and the patient's answer: either an audio recording of them speaking, or text
+they typed. It may contain Nepali number words, a mix of Nepali and English, pauses and background noise.
 
 Rules:
 - Only use what the patient said. Never invent, guess or add information, and never give medical advice.
-- said_ne: the patient's answer as clean, correctly spelled Nepali (Devanagari). Fix obvious recognition errors
-  using the question as context; keep their meaning and their words.
+- said_ne: what the patient said, as clean, correctly spelled Nepali (Devanagari). Fix obvious typing or
+  hearing errors using the question as context; keep their meaning and their words.
 - en: what should be written in the form's box, in plain English, as the patient would write it.
-- If the answer is unintelligible, empty, or doesn't answer this question at all, set ok to false.
+- If the answer is unintelligible, silent, empty, or doesn't answer this question at all, set ok to false.
 """
 
 KIND_RULES = {
@@ -64,7 +64,7 @@ class NotInterpretable(ValueError):
     pass
 
 
-def _prompt(question: dict, transcript: str, today: dt.date) -> str:
+def _prompt(question: dict, transcript: str | None, today: dt.date) -> str:
     by, bm, bd = nepali_dates.ad_to_bs(today)
     return (
         f"Form question (English): {question['en']}\n"
@@ -72,7 +72,8 @@ def _prompt(question: dict, transcript: str, today: dt.date) -> str:
         f"Form section: {question.get('section_en', '')}\n"
         f"Answer type: {question['kind']}. {KIND_RULES[question['kind']]}\n"
         f"Today is {today.isoformat()} (AD), which is {by}-{bm:02d}-{bd:02d} in Bikram Sambat.\n"
-        f"Patient's answer: {transcript}"
+        + (f"Patient's answer: {transcript}" if transcript is not None
+           else "Patient's answer: the attached audio recording.")
     )
 
 
@@ -85,15 +86,29 @@ def _format_phone(digits: str) -> str:
 
 
 def interpret(question: dict, transcript: str, today: dt.date | None = None) -> dict:
-    """Return {"ok", "said", "en", "value", "parts"?}. "value" is what goes in the PDF box."""
-    kind = question["kind"]
-    if kind not in INTERPRETED_KINDS:
-        raise NotInterpretable(kind)
+    """Typed (or browser-recognised) text. Return {"ok", "said", "en", "value", "parts"?}; "value" goes in the PDF box."""
+    if question["kind"] not in INTERPRETED_KINDS:
+        raise NotInterpretable(question["kind"])
     transcript = " ".join(str(transcript).split())
     if not transcript:
         return {"ok": False}
     today = today or dt.date.today()
     data = gemini.generate_json(_prompt(question, transcript, today), SCHEMA, system=SYSTEM)
+    return _finish(question, data, transcript)
+
+
+def interpret_audio(question: dict, audio: bytes, mime: str, today: dt.date | None = None) -> dict:
+    """A recording of the patient's spoken answer. Gemini hears it and writes the English in one call."""
+    if question["kind"] not in INTERPRETED_KINDS:
+        raise NotInterpretable(question["kind"])
+    today = today or dt.date.today()
+    data = gemini.generate_json(_prompt(question, None, today), SCHEMA, system=SYSTEM, audio=(audio, mime))
+    return _finish(question, data, "")
+
+
+def _finish(question: dict, data: dict, transcript: str) -> dict:
+    """Check Gemini's reply and do the exact parts in code."""
+    kind = question["kind"]
     if not data.get("ok"):
         return {"ok": False}
     said = (data.get("said_ne") or transcript).strip()

@@ -55,7 +55,8 @@ def _busy(exc: Exception) -> bool:
 
 
 def generate_json(prompt: str, schema: dict, *, system: str | None = None, think: bool = False,
-                  model: str | None = None, retries: int = 1) -> dict:
+                  model: str | None = None, retries: int = 1, audio: tuple[bytes, str] | None = None) -> dict:
+    """audio: (bytes, mime type) of a recording Gemini should listen to along with the prompt."""
     from google.genai import types
 
     client = _get_client()
@@ -66,12 +67,13 @@ def generate_json(prompt: str, schema: dict, *, system: str | None = None, think
         temperature=0.2,
         thinking_config=None if think else types.ThinkingConfig(thinking_budget=0),
     )
+    contents = [types.Part.from_bytes(data=audio[0], mime_type=audio[1]), prompt] if audio else prompt
     current = model or settings.GEMINI_MODEL
     last = None
     for attempt in range(retries + 1):
         try:
             started = time.monotonic()
-            resp = client.models.generate_content(model=current, contents=prompt, config=config)
+            resp = client.models.generate_content(model=current, contents=contents, config=config)
             data = _parse(resp.text)
             log.info("gemini ok in %.1fs", time.monotonic() - started)
             return data

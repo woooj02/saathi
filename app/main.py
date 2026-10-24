@@ -203,6 +203,35 @@ def interpret(form_id: str, body: Spoken):
         raise HTTPException(502, "Couldn't understand the answer right now.")
 
 
+AUDIO_TYPES = {"audio/webm", "audio/ogg", "audio/mp4", "audio/mpeg", "audio/wav", "audio/aac", "audio/flac"}
+MAX_AUDIO = 8 * 1024 * 1024   # about 30 s of speech is well under 1 MB
+
+
+@app.post("/api/forms/{form_id}/interpret-audio")
+async def interpret_audio(form_id: str, question_id: str = Form(...), audio: UploadFile = File(...)):
+    """A recording of the patient's spoken answer -> the English for the form (Gemini listens to it)."""
+    form = _load(form_id)
+    question = next((q for q in form["questions"] if q["id"] == question_id), None)
+    if question is None:
+        raise HTTPException(404, "No such question.")
+    if not gemini.available():
+        raise HTTPException(503, "AI is not configured; type or tap the answer instead.")
+    mime = (audio.content_type or "").split(";")[0].strip().lower()
+    if mime not in AUDIO_TYPES:
+        raise HTTPException(415, "Unsupported recording format.")
+    data = await audio.read(MAX_AUDIO + 1)
+    if not data:
+        return {"ok": False}
+    if len(data) > MAX_AUDIO:
+        raise HTTPException(413, "The recording is too long.")
+    try:
+        return answers.interpret_audio(question, data, mime)
+    except answers.NotInterpretable:
+        raise HTTPException(422, "This question is answered by tapping.")
+    except gemini.AIError:
+        raise HTTPException(502, "Couldn't understand the answer right now.")
+
+
 @app.post("/api/forms/{form_id}/submit")
 def submit(form_id: str, body: Submission):
     form = _load(form_id)
@@ -247,6 +276,15 @@ def bs_month_length(year: int, month: int):
 @app.get("/")
 def home():
     return RedirectResponse("/clinic")
+
+
+@app.middleware("http")
+async def revalidate_static(request: Request, call_next):
+    """Browsers check scripts and styles for changes on every load, so an update is never half-applied."""
+    response = await call_next(request)
+    if request.url.path.startswith("/static/"):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
 
 
 app.mount("/static", StaticFiles(directory=settings.WEB_DIR), name="static")

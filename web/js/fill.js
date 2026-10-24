@@ -1,7 +1,7 @@
 // Patient journey: welcome → intro → one question per screen → review → consent → sign → sent.
 // See devpost/prd.md > The Core Journey (steps 5–11) and devpost/spec.md > Patient Pages.
 
-import { canListen, listen, stopListening, speak, stopSpeaking, canSpeak, ICONS } from "./voice.js";
+import { canRecord, recordAnswer, stopRecording, speak, stopSpeaking, canSpeak, ICONS } from "./voice.js";
 import { t, toNe, toAscii, hasDevanagari, BS_MONTHS, AD_MONTHS_NE, AD_MONTHS_EN } from "./nepali.js";
 
 const FORM_ID = decodeURIComponent(location.pathname.split("/").filter(Boolean)[1] || "");
@@ -53,7 +53,7 @@ const voicePrefs = () => (L() === "ne" ? ["ne", "hi"] : ["en"]);
 
 function screen(html) {
   stopSpeaking();
-  stopListening();
+  stopRecording();
   app.innerHTML = `<section class="screen">${html}</section>`;
   app.querySelector(".screen").lang = L() === "ne" ? "ne" : "en";
   window.scrollTo(0, 0);
@@ -173,11 +173,14 @@ function question() {
     ${q.help_ne && L() === "ne" ? `<p class="help">${esc(q.help_ne)}</p>` : ""}
     <div class="answer" id="answer"></div>
     <div class="foot">
+      ${q.optional && TYPED_KINDS.has(q.kind) ? `<button class="btn link skip" data-act="na">${esc(tr("notApplicable"))}</button>` : ""}
       <button class="btn link skip" data-act="skip">${esc(tr("skip"))}</button>
     </div>`);
   wireSpeakers(root);
   root.querySelector('[data-act="back"]').addEventListener("click", back);
   root.querySelector('[data-act="skip"]').addEventListener("click", () => record(q, { skipped: true, said: tr("skipped"), en: "Patient will provide at visit" }));
+  // "I don't have one": N/A on the form, so the clinic can tell it from a question that was missed
+  root.querySelector('[data-act="na"]')?.addEventListener("click", () => record(q, { value: "N/A", said: tr("notApplicable"), en: "N/A" }));
   const area = root.querySelector("#answer");
   const existing = st.answers[q.id];
   if (TYPED_KINDS.has(q.kind)) typedAnswer(q, area, existing);
@@ -262,7 +265,7 @@ function bothSides(q, area, rec, { onAgain, spoken = false } = {}) {
   area.querySelector('[data-act="again"]').addEventListener("click", () => (onAgain ? onAgain() : render()));
 }
 
-// Ask the server to turn a Nepali answer into English (slice 4: Gemini).
+// Ask the server to turn a typed Nepali answer into English (Gemini).
 async function interpret(q, transcript) {
   const res = await fetch(`/api/forms/${encodeURIComponent(FORM_ID)}/interpret`, {
     method: "POST",
@@ -273,43 +276,57 @@ async function interpret(q, transcript) {
   return res.json();   // {ok, said, en, value}
 }
 
+// A recording of the spoken answer: Gemini listens to it and writes the English.
+async function interpretAudio(q, { blob, type }) {
+  const body = new FormData();
+  body.append("question_id", q.id);
+  body.append("audio", blob, `answer.${type.includes("mp4") ? "m4a" : type.includes("ogg") ? "ogg" : "webm"}`);
+  const res = await fetch(`/api/forms/${encodeURIComponent(FORM_ID)}/interpret-audio`, { method: "POST", body });
+  if (!res.ok) throw new Error(`interpret-audio ${res.status}`);
+  return res.json();   // {ok, said, en, value, parts?}
+}
+
 function micBlock() {
   return `
     <div class="speak-area">
       <button class="mic" data-act="mic" aria-label="${esc(tr("tapToSpeak"))}">${ICONS.mic}</button>
-      <div class="status">${esc(tr("tapToSpeak"))}</div>
-      <div class="live ne" lang="ne"></div>
+      <div class="meter" aria-hidden="true"><span></span></div>
+      <div class="status" role="status">${esc(tr("tapToSpeak"))}</div>
     </div>`;
 }
 
-function wireMic(q, area, onText) {
+// onResult(r) gets the interpreter's reply; it throws (or returns false) if the answer didn't fit.
+function wireMic(q, area, onResult) {
   const mic = area.querySelector('[data-act="mic"]');
   if (!mic) return;
   const status = area.querySelector(".status");
-  const live = area.querySelector(".live");
+  const level = area.querySelector(".meter span");
   mic.addEventListener("click", async () => {
-    if (mic.classList.contains("listening")) return stopListening();
+    if (mic.classList.contains("listening")) return stopRecording();
     stopSpeaking();
     mic.classList.add("listening");
     mic.innerHTML = ICONS.stop;
     status.textContent = tr("listening");
-    live.textContent = "";
     try {
-      const heard = await listen({ lang: L() === "ne" ? "ne-NP" : "en-US", onInterim: (s) => (live.textContent = s) });
-      live.textContent = heard.text;
+      const clip = await recordAnswer({ onLevel: (v) => (level.style.width = `${Math.round(v * 100)}%`) });
+      mic.classList.remove("listening");
+      mic.innerHTML = ICONS.mic;
+      mic.disabled = true;
       status.textContent = tr("understanding");
-      await onText(heard.text, { spoken: true });
+      const r = await interpretAudio(q, clip);
+      if (!r.ok || (await onResult(r)) === false) status.textContent = tr("heardNothing");
     } catch (err) {
       status.textContent = err.code === "not-allowed" || err.code === "audio-capture" ? tr("micBlocked") : tr("heardNothing");
     } finally {
       mic.classList.remove("listening");
       mic.innerHTML = ICONS.mic;
+      mic.disabled = false;
     }
   });
 }
 
 function typedAnswer(q, area, existing) {
-  const canSpeakAnswer = ai && canListen();
+  const canSpeakAnswer = ai && canRecord();
   const placeholder = ai ? tr("typeHere") : tr("typeHereLatin");
   const inputmode = q.kind === "number" ? "tel" : q.kind === "email" ? "email" : "text";
   const prior = existing && !existing.skipped ? existing.en : "";
@@ -327,15 +344,15 @@ function typedAnswer(q, area, existing) {
   const err = area.querySelector("#err");
   const showErr = (msg) => { err.textContent = msg; err.classList.remove("hidden"); };
 
-  const handle = async (text, { spoken = false } = {}) => {
+  const handle = async (text) => {
     text = toAscii(text).trim();
     if (!text) return;
-    if (hasDevanagari(text) || spoken) {
+    if (hasDevanagari(text)) {
       if (!ai) return showErr(tr("latinOnly"));
       try {
         const r = await interpret(q, text);
         if (!r.ok) return showErr(tr("heardNothing"));
-        bothSides(q, area, { value: r.value, said: r.said || text, en: r.en }, { onAgain: () => render(), spoken });
+        bothSides(q, area, { value: r.value, said: r.said || text, en: r.en }, { onAgain: () => render() });
       } catch {
         showErr(tr("heardNothing"));
       }
@@ -346,7 +363,7 @@ function typedAnswer(q, area, existing) {
     record(q, { value: text, said: text, en: text });   // typed in English letters: nothing to translate
   };
 
-  wireMic(q, area, handle);
+  wireMic(q, area, (r) => bothSides(q, area, { value: r.value, said: r.said, en: r.en }, { onAgain: () => render(), spoken: true }));
   area.querySelectorAll("[data-s]").forEach((b) =>
     b.addEventListener("click", () => {
       const s = q.suggestions[Number(b.dataset.s)];
@@ -369,7 +386,7 @@ function bsToday() {
 
 function dateAnswer(q, area, existing) {
   const parts = (existing && existing.parts) || { calendar: L() === "ne" ? "BS" : "AD", year: "", month: "", day: "" };
-  const canSpeakAnswer = ai && canListen();
+  const canSpeakAnswer = ai && canRecord();
 
   const draw = () => {
     const bs = parts.calendar === "BS";
@@ -417,9 +434,8 @@ function dateAnswer(q, area, existing) {
       }),
     );
     area.querySelector('[data-act="done"]').addEventListener("click", () => confirmDate(parts));
-    wireMic(q, area, async (text) => {
-      const r = await interpret(q, text);
-      if (!r.ok || !r.parts) throw Object.assign(new Error("no date"), { code: "no-speech" });
+    wireMic(q, area, async (r) => {
+      if (!r.parts) return false;
       Object.assign(parts, r.parts);
       await confirmDate(parts, true);
     });

@@ -12,7 +12,7 @@ sends the clinic its own PDF filled in English.
 
 ## Run it
 
-Needs Python 3.12 and Google Chrome (for speech recognition).
+Needs Python 3.12 and a modern browser (Chrome is what it was tested in).
 
 ```bash
 cp .env.example .env      # then fill in the keys you have (see below)
@@ -45,7 +45,7 @@ clinic PDF ──► pdf_reader (PyMuPDF: boxes + printed labels) ──► conv
                                                                    │  every box once, real option values
                                                                    ▼
 patient phone ◄── form.json ── clinic review & publish
-   │  speech (Chrome, ne-NP) ─► answers (Gemini: clean Nepali + English)
+   │  recorded answer ─► answers (Gemini listens: Nepali + English)
    │  dates: AI finds the date, code converts Bikram Sambat → Gregorian exactly
    ▼
 submit ─► answers_to_pdf ─► filler (PyMuPDF: values + typed signature) ─► mailer (Zoho) + patient download
@@ -68,7 +68,7 @@ Gemini and SMTP are replaced with fakes in tests. Nothing is sent or billed.
 ## Limits
 
 This is a proof of concept. It's only been run with the fictional sample form and made-up answers. It isn't HIPAA
-compliant, and Gemini's free tier may use prompts to improve Google's products, so don't use it with real patient
+compliant, and Gemini's free tier may use prompts and recordings to improve Google's products, so don't use it with real patient
 information. Saathi translates questions and answers; it never suggests what to answer.
 
 ## License

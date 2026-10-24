@@ -192,5 +192,13 @@ Activity mode: not started
 - The sample's questions are now Gemini's live conversion (about 70 s, every box covered, 4 consent sections,
   nothing needing review). The hand-written version became the tests' fixed copy (`tests/fixtures/sample-form.json`),
   so tests don't change when the sample is re-converted. A new test checks the shipped sample still fits the PDF.
+- The learner's `/lab` test: Chrome's Nepali recognition heard nothing for all 6 answers (no error, no words). Per the
+  spec's planned fallback, the patient mic now records the answer and Gemini listens to it
+  (`POST /api/forms/{id}/interpret-audio`, one call per answer), with a level bar and auto-stop after a pause.
+  Checked with generated Nepali clips through the API and through the real page with the clip played into the mic.
+- The learner had to type "n/a" for middle name. Optional typed questions now have "मसँग छैन / लागू हुँदैन" (I don't
+  have one / Doesn't apply), which writes N/A on the form so the clinic can tell it from a missed question.
+- Static files are sent with `Cache-Control: no-cache`, because Chrome kept running an old copy of the page script
+  after an update.
 - One real Zoho send on 2026-10-24 (13:36), from contact@ to contact@keepsrunning.com: status `sent`, filled PDF
   attached.
