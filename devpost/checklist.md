@@ -45,7 +45,7 @@ points.
   a short accident story, a medication, and a yes/no. Say whether the transcripts are usable.
   Commit: `Add Nepali speech test page`
 
-- [ ] **3. A patient can fill the sample form in Nepali and download the English PDF**
+- [x] **3. A patient can fill the sample form in Nepali and download the English PDF**
   Becomes usable: `/f/sample` is the full patient journey on the sample form: welcome, language, intro, then one
   question per screen. There are हो/होइन buttons, choices, the ० to १० scale, typed text and a date picker that
   accepts Nepali or English calendar dates, plus skip, back, review, consent explained in Nepali, the typed signature
@@ -151,3 +151,13 @@ Activity mode: not started
 - The default port is 8010, not 8000. Another of the learner's local apps already uses 8000.
 - The signature box is removed and the typed name drawn in its place. Form boxes are painted on top of the page, so a
   signature drawn under the grey box was hidden.
+- The sample's questions in `samples/pt-intake/form.json` are hand-written for now
+  (`scripts/sample_questions.py`, `"source": "handwritten"`). There's no Gemini key yet. Slice 5 replaces them with
+  Gemini's live conversion. They use the converter's exact output format, so nothing downstream changes.
+- Added answer kinds that the spec only implied: `number`, `code` (IDs and claim numbers) and `email`, plus
+  `auto_date`, `auto_name` and `skip` for boxes Saathi fills itself or leaves alone. Text questions can offer tap
+  suggestions, for example relationships. Without AI, typed answers must be in English letters, because the clinic's
+  PDF font can't show Devanagari and the clinic needs English. Nepali typing and speech go through the interpreter in
+  slice 4.
+- Dates also have a picker (Nepali or English calendar, year/month/day) that needs no AI. The server converts BS→AD
+  exactly (`GET /api/dates/convert`). Speaking a date is added in slice 4.

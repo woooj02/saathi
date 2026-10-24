@@ -1,0 +1,153 @@
+// Nepali digits, calendar names and the patient screens' interface text.
+
+const NE_DIGITS = "०१२३४५६७८९";
+
+export function toNe(value) {
+  return String(value).replace(/[0-9]/g, (d) => NE_DIGITS[d]);
+}
+
+export function toAscii(value) {
+  return String(value).replace(/[०-९]/g, (d) => String(NE_DIGITS.indexOf(d)));
+}
+
+export const hasDevanagari = (s) => /[ऀ-ॿ]/.test(s);
+
+export const BS_MONTHS = ["बैशाख", "जेठ", "असार", "साउन", "भदौ", "असोज", "कात्तिक", "मंसिर", "पुस", "माघ", "फागुन", "चैत"];
+export const AD_MONTHS_NE = ["जनवरी", "फेब्रुअरी", "मार्च", "अप्रिल", "मे", "जुन", "जुलाई", "अगस्ट", "सेप्टेम्बर", "अक्टोबर", "नोभेम्बर", "डिसेम्बर"];
+export const AD_MONTHS_EN = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+// Interface text in both languages. {n} and {total} etc. are filled by t().
+export const TEXT = {
+  ne: {
+    chooseLanguage: "भाषा छान्नुहोस्",
+    welcomeLine: "यो फारम तपाईंको आफ्नै भाषामा भर्नुहोस्। क्लिनिकले अंग्रेजीमा पाउँछ।",
+    introTitle: "म तपाईंलाई यो फारम भर्न मद्दत गर्छु",
+    introBody: "म एक पटकमा एउटा प्रश्न सोध्छु। तपाईं बोलेर, लेखेर वा थिचेर जवाफ दिन सक्नुहुन्छ। थाहा नभएको प्रश्न छोड्न सक्नुहुन्छ, क्लिनिकमा पछि दिन सकिन्छ।",
+    introCount: "जम्मा {total} प्रश्न · करिब {minutes} मिनेट",
+    readAloud: "प्रश्नहरू आवाजमा सुनाउनुहोस्",
+    start: "सुरु गर्नुहोस्",
+    continueWhere: "जहाँ छोड्नुभएको थियो, त्यहीँबाट",
+    startOver: "फेरि सुरुदेखि",
+    progress: "प्रश्न {n} / {total}",
+    back: "पछाडि",
+    listen: "सुन्नुहोस्",
+    skip: "थाहा छैन / पछि दिन्छु",
+    skipped: "पछि दिने",
+    next: "अगाडि बढ्नुहोस्",
+    none: "कुनै पनि होइन",
+    typeInstead: "लेखेर जवाफ दिनुहोस्",
+    typeHereLatin: "अंग्रेजी अक्षरमा लेख्नुहोस्",
+    typeHere: "यहाँ लेख्नुहोस्",
+    latinOnly: "कृपया अंग्रेजी अक्षरमा लेख्नुहोस् (जस्तै: Kamala)। नेपालीमा भन्न माइक थिच्नुहोस्।",
+    badEmail: "इमेल ठेगाना मिलेन। जस्तै: kamala@gmail.com",
+    badNumber: "नम्बर पूरा भएन। अंकहरू फेरि लेख्नुहोस्।",
+    done: "ठीक छ",
+    youSaid: "तपाईंले भन्नुभयो",
+    onTheForm: "फारममा अंग्रेजीमा",
+    looksRight: "ठीक छ, अगाडि",
+    tryAgain: "फेरि भन्नुहोस्",
+    edit: "सच्याउनुहोस्",
+    calendarBS: "नेपाली पात्रो (वि.सं.)",
+    calendarAD: "अंग्रेजी पात्रो (ई.सं.)",
+    year: "साल",
+    month: "महिना",
+    day: "गते",
+    noPain: "दुखाइ छैन",
+    worstPain: "सबैभन्दा धेरै",
+    reviewTitle: "आफ्ना जवाफ एक पटक हेर्नुहोस्",
+    reviewBody: "कुनै जवाफ सच्याउन त्यसमा थिच्नुहोस्।",
+    reviewDone: "सबै ठीक छ",
+    consentTitle: "हस्ताक्षर गर्नुअघि यो बुझ्नुहोस्",
+    consentBody: "फारमको अन्त्यमा यी कुरामा सहमति माग्छ। यहाँ सजिलो नेपालीमा लेखिएको छ।",
+    originalEnglish: "मूल अंग्रेजी हेर्नुहोस्",
+    understood: "मैले माथिका कुरा बुझें र सहमत छु",
+    signTitle: "हस्ताक्षर",
+    signBody: "आफ्नो पूरा नाम अंग्रेजी अक्षरमा लेख्नुहोस्। यही नाम हस्ताक्षरको रूपमा फारममा जान्छ।",
+    signPlaceholder: "जस्तै: Kamala Neupane",
+    signed: "हस्ताक्षर गरेको मिति",
+    send: "फारम पठाउनुहोस्",
+    sending: "फारम पठाउँदै…",
+    sentTitle: "तपाईंको फारम {clinic} मा पठाइयो",
+    sentBody: "क्लिनिकले यो फारम अंग्रेजीमा पाउनेछ। तपाईंले केही पनि अंग्रेजीमा लेख्नुपरेन।",
+    savedTitle: "तपाईंको फारम तयार छ",
+    savedBody: "यो प्रति डाउनलोड गर्नुहोस् र क्लिनिकको रिसेप्सनमा देखाउनुहोस्।",
+    download: "आफ्नो प्रति डाउनलोड गर्नुहोस्",
+    sendFailed: "फारम पठाउन सकिएन। इन्टरनेट जाँचेर फेरि प्रयास गर्नुहोस्।",
+    retry: "फेरि प्रयास गर्नुहोस्",
+    notActive: "यो फारमको लिंक अहिले चालु छैन। क्लिनिकलाई सोध्नुहोस्।",
+    heardNothing: "मैले बुझिनँ। कृपया फेरि भन्नुहोस्, वा लेख्नुहोस्।",
+    micBlocked: "माइक चल्न सकेन। लेखेर जवाफ दिनुहोस्।",
+    listening: "सुन्दैछु… बोल्नुहोस्",
+    understanding: "बुझ्दैछु…",
+    tapToSpeak: "थिच्नुहोस् र नेपालीमा बोल्नुहोस्",
+  },
+  en: {
+    chooseLanguage: "Choose your language",
+    welcomeLine: "Fill this form in your own language. The clinic receives it in English.",
+    introTitle: "I'll help you fill in this form",
+    introBody: "I ask one question at a time. You can answer by speaking, typing or tapping. You can skip anything you don't know and give it at the clinic later.",
+    introCount: "{total} questions · about {minutes} minutes",
+    readAloud: "Read the questions aloud",
+    start: "Start",
+    continueWhere: "Continue where you left off",
+    startOver: "Start over",
+    progress: "Question {n} of {total}",
+    back: "Back",
+    listen: "Listen",
+    skip: "I don't know / I'll give it later",
+    skipped: "Later",
+    next: "Next",
+    none: "None of these",
+    typeInstead: "Type the answer",
+    typeHereLatin: "Type here",
+    typeHere: "Type here",
+    latinOnly: "Please type in English letters.",
+    badEmail: "That email address doesn't look complete, e.g. kamala@gmail.com",
+    badNumber: "That number looks incomplete.",
+    done: "Done",
+    youSaid: "You said",
+    onTheForm: "On the form, in English",
+    looksRight: "Looks right, next",
+    tryAgain: "Say it again",
+    edit: "Change",
+    calendarBS: "Nepali calendar (B.S.)",
+    calendarAD: "English calendar (A.D.)",
+    year: "Year",
+    month: "Month",
+    day: "Day",
+    noPain: "No pain",
+    worstPain: "Worst pain",
+    reviewTitle: "Check your answers",
+    reviewBody: "Tap any answer to change it.",
+    reviewDone: "Everything looks right",
+    consentTitle: "Before you sign",
+    consentBody: "The form asks you to agree to these. Here they are in plain words.",
+    originalEnglish: "Show the original text",
+    understood: "I understand and agree",
+    signTitle: "Signature",
+    signBody: "Type your full name. It goes on the form as your signature.",
+    signPlaceholder: "e.g. Kamala Neupane",
+    signed: "Date signed",
+    send: "Send the form",
+    sending: "Sending…",
+    sentTitle: "Your form was sent to {clinic}",
+    sentBody: "The clinic receives it in English.",
+    savedTitle: "Your form is ready",
+    savedBody: "Download this copy and show it at the front desk.",
+    download: "Download your copy",
+    sendFailed: "The form couldn't be sent. Check your internet and try again.",
+    retry: "Try again",
+    notActive: "This form link isn't active. Please ask the clinic.",
+    heardNothing: "I didn't catch that. Please say it again, or type it.",
+    micBlocked: "The microphone isn't available. Please type your answer.",
+    listening: "Listening… go ahead",
+    understanding: "Understanding…",
+    tapToSpeak: "Tap and speak",
+  },
+};
+
+export function t(lang, key, vars = {}) {
+  let s = (TEXT[lang] && TEXT[lang][key]) ?? TEXT.en[key] ?? key;
+  for (const [k, v] of Object.entries(vars)) s = s.replace(`{${k}}`, lang === "ne" ? toNe(v) : v);
+  return s;
+}

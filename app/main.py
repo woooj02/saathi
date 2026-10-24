@@ -1,12 +1,16 @@
 """Saathi web server: the clinic pages, the patient pages and their small JSON API."""
 import json
+import re
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, Request
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
 
-from . import settings
+from . import mailer, nepali_dates, settings, store
+from .answers_to_pdf import BadAnswer, build_values
+from .filler import fill_pdf
 
 app = FastAPI(title="Saathi")
 
@@ -38,9 +42,77 @@ async def lab_results(request: Request):
     return {"ok": True, "runs": len(runs)}
 
 
+# -- patient side -------------------------------------------------------------
+
+def _load(form_id: str) -> dict:
+    try:
+        return store.load(form_id)
+    except store.FormNotFound:
+        raise HTTPException(404, "This form link isn't active.")
+
+
+@app.get("/f/{form_id}")
+def patient_page(form_id: str):
+    return page("fill.html")
+
+
+@app.get("/api/forms/{form_id}")
+def get_form(form_id: str):
+    form = _load(form_id)
+    if form.get("status") != "published":
+        raise HTTPException(404, "This form link isn't active.")
+    return store.patient_view(form)
+
+
+class Submission(BaseModel):
+    answers: dict = Field(default_factory=dict)
+    signer_name: str = Field(min_length=2, max_length=80)
+
+
+@app.post("/api/forms/{form_id}/submit")
+def submit(form_id: str, body: Submission):
+    form = _load(form_id)
+    if form.get("status") != "published":
+        raise HTTPException(404, "This form link isn't active.")
+    name = " ".join(body.signer_name.split())
+    if re.search(r"[\u0900-\u097F]", name):
+        raise HTTPException(422, "Please type the name in English letters.")
+    try:
+        values, signature, skipped = build_values(form, body.answers, name)
+    except BadAnswer as exc:
+        raise HTTPException(422, str(exc))
+    pdf = fill_pdf(store.original_pdf(form_id), values, signature)
+    status = mailer.deliver(form, pdf, name, skipped)
+    safe = re.sub(r"[^A-Za-z0-9]+", "-", name).strip("-") or "patient"
+    return Response(pdf, media_type="application/pdf", headers={
+        "X-Mail-Status": status,
+        "Content-Disposition": f'attachment; filename="intake-{safe}.pdf"',
+        "Access-Control-Expose-Headers": "X-Mail-Status",
+    })
+
+
+@app.get("/api/dates/convert")
+def convert_date(calendar: str, year: int, month: int, day: int, fmt: str = "MM/DD/YYYY"):
+    """A date from the picker, in either calendar, as the form wants it."""
+    try:
+        date = nepali_dates.to_date(calendar, year, month, day)
+    except nepali_dates.BadDate as exc:
+        raise HTTPException(422, str(exc))
+    return {"value": nepali_dates.format_for_form(date, fmt), "en": nepali_dates.describe_en(date),
+            "ne": nepali_dates.describe_ne(date, calendar)}
+
+
+@app.get("/api/dates/bs-month-length")
+def bs_month_length(year: int, month: int):
+    try:
+        return {"days": nepali_dates.bs_days_in_month(year, month)}
+    except nepali_dates.BadDate as exc:
+        raise HTTPException(422, str(exc))
+
+
 @app.get("/")
 def home():
-    return RedirectResponse("/lab")
+    return RedirectResponse("/f/sample")
 
 
 app.mount("/static", StaticFiles(directory=settings.WEB_DIR), name="static")

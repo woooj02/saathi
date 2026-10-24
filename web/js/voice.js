@@ -121,12 +121,12 @@ export async function pickVoice(preferred = ["ne", "hi"]) {
   return null;
 }
 
-export async function canSpeak() {
-  return Boolean(await pickVoice());
+export async function canSpeak(prefer = ["ne", "hi"]) {
+  return Boolean(await pickVoice(prefer));
 }
 
-export async function speak(text, { rate = 0.9 } = {}) {
-  const voice = await pickVoice();
+export async function speak(text, { rate = 0.9, prefer = ["ne", "hi"] } = {}) {
+  const voice = await pickVoice(prefer);
   if (!voice) throw new VoiceError("unsupported", "No Nepali or Hindi voice on this device");
   speechSynthesis.cancel();
   return new Promise((resolve, reject) => {
