@@ -6,11 +6,14 @@
 @font-face { font-family: "Dancing Script"; src: url("/static/fonts/DancingScript.ttf") format("truetype"); font-weight: 400 700; font-display: swap; }
 
 :root {
-  --ink: #000;
-  --paper: #fff;
+  --ink: #111;
+  --paper: #fafaf8;     /* near-white */
+  --white: #fff;        /* fields and cards sit on it */
+  --accent: #111;       /* actions */
+  --accent-2: #3a3a3a;  /* pressed / hover */
   --grey-1: #f4f4f4;   /* quiet fills */
   --grey-2: #e2e2e2;   /* borders */
-  --grey-3: #8a8a8a;   /* secondary text */
+  --grey-3: #767676;   /* secondary text (AA on paper) */
   --grey-4: #4a4a4a;
   --radius: 12px;
   --tap: 64px;
@@ -46,6 +49,7 @@ a { color: inherit; }
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; }
 .brand { font-weight: 800; letter-spacing: .02em; font-size: 15px; text-transform: uppercase; }
 .brand .ne { font-weight: 700; text-transform: none; margin-left: 6px; }
+
 .grow { flex: 1; }
 .stack > * + * { margin-top: 12px; }
 .row { display: flex; gap: 12px; align-items: center; }
@@ -67,16 +71,16 @@ button { font: inherit; color: inherit; }
 .btn svg { width: 22px; height: 22px; flex: none; }
 .btn:hover { background: var(--grey-1); }
 .btn:disabled { opacity: .35; cursor: not-allowed; }
-.btn.primary { background: var(--ink); color: var(--paper); }
-.btn.primary:hover { background: var(--grey-4); border-color: var(--grey-4); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--white); }
+.btn.primary:hover { background: var(--accent-2); border-color: var(--accent-2); }
 .btn.quiet { border-color: var(--grey-2); }
 .btn.big { min-height: var(--tap); font-size: 20px; width: 100%; }
 .btn.link { border: 0; background: none; padding: 0 4px; min-height: 40px; text-decoration: underline; text-underline-offset: 3px; }
-.btn:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+.btn:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
 .icon-btn {
   width: 48px; height: 48px; border-radius: 50%;
-  border: 1.5px solid var(--grey-2); background: var(--paper);
+  border: 1.5px solid var(--grey-2); background: var(--white);
   display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex: none;
 }
 .icon-btn:hover { border-color: var(--ink); }
@@ -84,7 +88,7 @@ button { font: inherit; color: inherit; }
 
 .mic {
   width: 96px; height: 96px; border-radius: 50%;
-  border: 0; background: var(--ink); color: var(--paper);
+  border: 0; background: var(--accent); color: var(--white);
   display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
   transition: transform .15s;
 }
@@ -98,12 +102,12 @@ label.field > span { display: block; font-size: 15px; font-weight: 600; margin-b
 input[type=text], input[type=email], input[type=search], textarea, select {
   width: 100%; font: inherit; color: var(--ink);
   border: 1.5px solid var(--grey-2); border-radius: var(--radius);
-  background: var(--paper); padding: 12px 14px; min-height: 52px;
+  background: var(--white); padding: 12px 14px; min-height: 52px;
 }
 input:focus, textarea:focus, select:focus { border-color: var(--ink); outline: none; }
 textarea { min-height: 120px; resize: vertical; }
 
-.card { border: 1.5px solid var(--grey-2); border-radius: var(--radius); padding: 18px; background: var(--paper); }
+.card { border: 1.5px solid var(--grey-2); border-radius: var(--radius); padding: 18px; background: var(--white); }
 .card.ink { border-color: var(--ink); }
 .card.dashed { border-style: dashed; border-color: var(--ink); }
 .tag {
@@ -112,7 +116,7 @@ textarea { min-height: 120px; resize: vertical; }
 }
 .tag.quiet { border-color: var(--grey-2); color: var(--grey-4); }
 
-.notice { border-left: 3px solid var(--ink); padding: 10px 14px; background: var(--grey-1); border-radius: 0 var(--radius) var(--radius) 0; }
+.notice { border-left: 3px solid var(--accent); padding: 10px 14px; background: var(--grey-1); border-radius: 0 var(--radius) var(--radius) 0; }
 
 /* -- motion ----------------------------------------------------------------- */
 
